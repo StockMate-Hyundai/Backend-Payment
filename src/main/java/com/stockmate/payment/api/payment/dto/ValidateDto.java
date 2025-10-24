@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PayRequestEventDto {
+public class ValidateDto {
     private Long orderId;
-    private Long userId;
+    private Long memberId;
     private String orderNumber;
     private PaymentType paymentType;
     private int totalPrice;

@@ -1,6 +1,7 @@
 package com.stockmate.payment.common.consumer;
 
 import com.stockmate.payment.api.payment.dto.PayRequestEventDto;
+import com.stockmate.payment.api.payment.entity.PaymentType;
 import com.stockmate.payment.api.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ public class PayRequestConsumer {
 
     @KafkaListener(
             topics = "${kafka.topics.pay-request}",
-
+            groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
 
@@ -30,8 +31,26 @@ public class PayRequestConsumer {
             @Header(KafkaHeaders.OFFSET) long offset,
             Acknowledgment acknowledgment
     ) {
-        paymentService.handlePayRequest(event);
-        acknowledgment.acknowledge();
-    }
+        log.info("결제 요청 수신 - Topic: {}, Partition: {}, Offset: {}, OrderId: {}, PaymentType: {}",
+                topic, partition, offset, event.getOrderId(), event.getPaymentType());
 
+        try {
+            if (event.getPaymentType() == PaymentType.DEPOSIT) { // 예치금 결제
+                paymentService.handleDepositPayRequest(event);
+            } else if (event.getPaymentType() == PaymentType.CARD) { // 카드 결제
+                paymentService.handleCardPayRequest(event);
+            } else {
+                log.error("지원하지 않는 결제 타입: {}", event.getPaymentType());
+                throw new IllegalArgumentException("지원하지 않는 결제 타입: " + event.getPaymentType());
+            }
+            log.info("결제 요청 처리 완료 - OrderId: {}", event.getOrderId());
+            acknowledgment.acknowledge();
+
+        } catch (Exception e) {
+            log.error("결제 요청 처리 실패 - OrderId: {}, Error: {}", event.getOrderId(), e.getMessage(), e);
+            // DLQ(Dead Letter Queue)로 전송하거나 재시도 정책에 따라 처리
+            // 현재는 acknowledge하지 않아 재처리되도록 함
+            throw e;
+        }
+    }
 }
