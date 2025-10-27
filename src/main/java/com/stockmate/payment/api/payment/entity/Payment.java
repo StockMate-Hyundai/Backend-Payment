@@ -39,7 +39,7 @@ public class Payment extends BaseTimeEntity {
                 .paymentType(p.getPaymentType())
                 .totalAmount((long) p.getTotalPrice())
                 .status(status)
-                .user(p.getUserId())
+                .user(p.getMemberId())
                 .build();
     }
 }
