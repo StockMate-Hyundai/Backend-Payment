@@ -1,9 +1,6 @@
 package com.stockmate.payment.api.payment.service;
 
-import com.stockmate.payment.api.payment.dto.CancelRequestEvent;
-import com.stockmate.payment.api.payment.dto.PayRequestEventDto;
-import com.stockmate.payment.api.payment.dto.PayResponseEvent;
-import com.stockmate.payment.api.payment.dto.ValidateDto;
+import com.stockmate.payment.api.payment.dto.*;
 import com.stockmate.payment.api.payment.entity.Balance;
 import com.stockmate.payment.api.payment.entity.OrderStatus;
 import com.stockmate.payment.api.payment.entity.Payment;
@@ -130,24 +127,14 @@ public class PaymentService {
                     event.getMemberId(), event.getTotalPrice(), balance.getBalance());
 
             // ✅ 4. 성공 이벤트 발행
-            PayResponseEvent response = PayResponseEvent.builder()
-                    .orderId(event.getOrderId())
-                    .orderNumber(event.getOrderNumber())
-                    .approvalAttemptId("CANCEL-" + System.currentTimeMillis())
-                    .build();
-
-//            kafkaProducerService.sendCancelSuccess(response); // 결제 성공/취소 공용 토픽으로 발행
+            CancelResponseEvent response = CancelResponseEvent.of(event);
+            kafkaProducerService.sendCancelSuccess(response); // 결제 성공/취소 공용 토픽으로 발행
 
         } catch (IllegalStateException e) {
             log.error("❌ 결제 취소 실패 - orderId={}, reason={}", event.getOrderId(), e.getMessage());
 
-            PayResponseEvent response = PayResponseEvent.builder()
-                    .orderId(event.getOrderId())
-                    .orderNumber(event.getOrderNumber())
-                    .approvalAttemptId("CANCEL-" + System.currentTimeMillis())
-                    .build();
-
-//            kafkaProducerService.sendCancelFailed(response);
+            CancelResponseEvent response = CancelResponseEvent.of(event);
+            kafkaProducerService.sendCancelFailed(response);
         } catch (Exception e) {
             log.error("💥 시스템 오류 - orderId={}, ex={}", event.getOrderId(), e.toString(), e);
 

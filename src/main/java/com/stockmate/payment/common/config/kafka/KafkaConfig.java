@@ -43,6 +43,8 @@ public class KafkaConfig {
         Map<String, Class<?>> classIdMapping = new HashMap<>();
         classIdMapping.put("sendPaySuccess", PayResponseEvent.class);
         classIdMapping.put("sendPayFailed", PayResponseEvent.class);
+        classIdMapping.put("sendCancelSuccess", PayResponseEvent.class);
+        classIdMapping.put("sendCancelFailed", PayResponseEvent.class);
         typeMapper.setIdClassMapping(classIdMapping);
         jsonSerializer.setTypeMapper(typeMapper);
 
