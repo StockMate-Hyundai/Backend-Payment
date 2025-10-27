@@ -21,6 +21,27 @@ public class PaymentService {
     private final BalanceRepository balanceRepository;
     private final PaymentRepository paymentRepository;
 
+    // 예치금 충전
+    @Transactional
+    public void depositCharge(Long userId, Long amount) {
+        log.info("💰 예치금 충전 요청 - userId: {}, 충전 금액: {}", userId, amount);
+
+        Balance balance = balanceRepository.findBalanceByUserIdWithLock(userId);
+
+        if (balance == null) {
+            balance = new Balance();
+            balance.setUserId(userId);
+            balance.setBalance(0L);
+        }
+
+        long newBalance = balance.getBalance() + amount;
+        balance.setBalance(newBalance);
+        balanceRepository.save(balance);
+
+        log.info("✅ 예치금 충전 완료 - userId: {}, 충전 금액: {}, 최종 잔액: {}", userId, amount, newBalance);
+    }
+
+    // 결제 요청
     @Transactional
     public void handleDepositPayRequest(PayRequestEventDto event) {
         log.info("💳 결제 요청 수신 - orderId: {}, payAmount: {}",
