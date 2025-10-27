@@ -1,5 +1,6 @@
 package com.stockmate.payment.common.config.kafka;
 
+import com.stockmate.payment.api.payment.dto.CancelResponseEvent;
 import com.stockmate.payment.api.payment.dto.PayResponseEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -43,8 +44,8 @@ public class KafkaConfig {
         Map<String, Class<?>> classIdMapping = new HashMap<>();
         classIdMapping.put("sendPaySuccess", PayResponseEvent.class);
         classIdMapping.put("sendPayFailed", PayResponseEvent.class);
-        classIdMapping.put("sendCancelSuccess", PayResponseEvent.class);
-        classIdMapping.put("sendCancelFailed", PayResponseEvent.class);
+        classIdMapping.put("sendCancelSuccess", CancelResponseEvent.class);
+        classIdMapping.put("sendCancelFailed", CancelResponseEvent.class);
         typeMapper.setIdClassMapping(classIdMapping);
         jsonSerializer.setTypeMapper(typeMapper);
 
