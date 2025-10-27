@@ -37,8 +37,8 @@ public class PayRequestConsumer {
         try {
             if (event.getPaymentType() == PaymentType.DEPOSIT) { // 예치금 결제
                 paymentService.handleDepositPayRequest(event);
-            } else if (event.getPaymentType() == PaymentType.CARD) { // 카드 결제
-                paymentService.handleCardPayRequest(event);
+//            } else if (event.getPaymentType() == PaymentType.CARD) { // 카드 결제
+//                paymentService.handleCardPayRequest(event);
             } else {
                 log.error("지원하지 않는 결제 타입: {}", event.getPaymentType());
                 throw new IllegalArgumentException("지원하지 않는 결제 타입: " + event.getPaymentType());
