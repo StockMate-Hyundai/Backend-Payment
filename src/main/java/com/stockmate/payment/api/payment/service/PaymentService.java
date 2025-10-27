@@ -1,5 +1,6 @@
 package com.stockmate.payment.api.payment.service;
 
+import com.stockmate.payment.api.payment.dto.CancelRequestEvent;
 import com.stockmate.payment.api.payment.dto.PayRequestEventDto;
 import com.stockmate.payment.api.payment.dto.PayResponseEvent;
 import com.stockmate.payment.api.payment.dto.ValidateDto;
@@ -82,7 +83,7 @@ public class PaymentService {
 
         } catch (IllegalArgumentException e) {
             log.error("❌ 결제 검증 실패 - orderId={}, reason={}", event.getOrderId(), e.getMessage());
-            fail(pay, event, PaymentStatus.VALIDATE_FAILED, e.getMessage());
+            payFailed(pay, event, PaymentStatus.VALIDATE_FAILED, e.getMessage());
 
         } catch (IllegalStateException e) {
             log.error("❌ 결제 실패 - orderId={}, reason={}", event.getOrderId(), e.getMessage());
@@ -90,16 +91,79 @@ public class PaymentService {
                     e.getMessage().contains("잔액") ? PaymentStatus.NOT_ENOUGH :
                             e.getMessage().contains("상태") ? PaymentStatus.STATUS_ERROR :
                                     PaymentStatus.FAILED;
-            fail(pay, event, status, e.getMessage());
+            payFailed(pay, event, status, e.getMessage());
 
         } catch (Exception e) {
             log.error("💥 시스템 오류 - orderId={}, ex={}", event.getOrderId(), e.toString(), e);
-            fail(pay, event, PaymentStatus.FAILED, "INTERNAL_ERROR");
+            payFailed(pay, event, PaymentStatus.FAILED, "INTERNAL_ERROR");
         }
     }
 
+    // 예치금 결제 취소 처리
+    @Transactional
+    public void handleDepositCancelRequest(CancelRequestEvent event) {
+        log.info("💳 결제 취소 요청 수신 - orderId: {}, payAmount: {}", event.getOrderId(), event.getTotalPrice());
+
+        try {
+            // ✅ 1. 결제 내역 확인
+            Payment payment = paymentRepository.findByOrderNumber(event.getOrderNumber());
+            if (payment == null) throw new IllegalStateException("결제 정보 없음");
+
+            // 이미 취소된 결제면 중복 처리 방지
+            if (payment.getStatus() == PaymentStatus.CANCELLED || payment.getStatus() == PaymentStatus.REFUNDED) {
+                log.warn("⚠️ 이미 취소된 결제 - orderId: {}", event.getOrderId());
+                throw new IllegalStateException("이미 취소된 결제입니다.");
+            }
+
+            // ✅ 2. 잔액 복원
+            Balance balance = balanceRepository.findBalanceByUserIdWithLock(event.getMemberId());
+            if (balance == null) throw new IllegalStateException("잔액 정보 없음");
+
+            balance.setBalance(balance.getBalance() + event.getTotalPrice());
+            balanceRepository.save(balance);
+
+            // ✅ 3. 결제 상태 변경
+            payment.setStatus(PaymentStatus.REFUNDED);
+            paymentRepository.save(payment);
+
+            log.info("✅ 결제 취소 완료 - userId: {}, 환불 금액: {}, 복원 후 잔액: {}",
+                    event.getMemberId(), event.getTotalPrice(), balance.getBalance());
+
+            // ✅ 4. 성공 이벤트 발행
+            PayResponseEvent response = PayResponseEvent.builder()
+                    .orderId(event.getOrderId())
+                    .orderNumber(event.getOrderNumber())
+                    .approvalAttemptId("CANCEL-" + System.currentTimeMillis())
+                    .build();
+
+//            kafkaProducerService.sendCancelSuccess(response); // 결제 성공/취소 공용 토픽으로 발행
+
+        } catch (IllegalStateException e) {
+            log.error("❌ 결제 취소 실패 - orderId={}, reason={}", event.getOrderId(), e.getMessage());
+
+            PayResponseEvent response = PayResponseEvent.builder()
+                    .orderId(event.getOrderId())
+                    .orderNumber(event.getOrderNumber())
+                    .approvalAttemptId("CANCEL-" + System.currentTimeMillis())
+                    .build();
+
+//            kafkaProducerService.sendCancelFailed(response);
+        } catch (Exception e) {
+            log.error("💥 시스템 오류 - orderId={}, ex={}", event.getOrderId(), e.toString(), e);
+
+            PayResponseEvent response = PayResponseEvent.builder()
+                    .orderId(event.getOrderId())
+                    .orderNumber(event.getOrderNumber())
+                    .approvalAttemptId("CANCEL-" + System.currentTimeMillis())
+                    .build();
+
+            kafkaProducerService.sendPayFailed(response);
+        }
+    }
+
+
     // 실패 처리
-    private void fail(Payment pay, PayRequestEventDto req, PaymentStatus status, String reason) {
+    private void payFailed(Payment pay, PayRequestEventDto req, PaymentStatus status, String reason) {
         pay.setStatus(status);
         paymentRepository.save(pay);
 
