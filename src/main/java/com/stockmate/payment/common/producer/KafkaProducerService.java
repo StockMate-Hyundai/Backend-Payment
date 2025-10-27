@@ -46,7 +46,7 @@ public class KafkaProducerService {
 
     public void sendPayFailed(PayResponseEvent event) {
         CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(
-                paySuccessTopic,
+                payFailedTopic,
                 event.getOrderId().toString(),
                 event
         );
