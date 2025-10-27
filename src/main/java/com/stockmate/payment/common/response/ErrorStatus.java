@@ -26,7 +26,8 @@ public enum ErrorStatus {
     /**
      * 404 NOT_FOUND
      */
-    USER_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND,"해당 사용자를 찾을 수 없습니다."),
+    USER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND,"해당 사용자를 찾을 수 없습니다."),
+    ORDER_DATA_NOT_MATCH_EXCEPTION(HttpStatus.NOT_FOUND, "주문 데이터가 일치하지 않습니다."),
 
     /**
      * 500 SERVER_ERROR
