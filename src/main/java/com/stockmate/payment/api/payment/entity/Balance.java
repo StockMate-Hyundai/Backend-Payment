@@ -22,5 +22,5 @@ public class Balance {
     private long balance;
 
     @Column(name = "user_id")
-    private Long user;
+    private Long userId;
 }

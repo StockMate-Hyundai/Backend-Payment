@@ -1,9 +1,9 @@
 package com.stockmate.payment.api.payment.entity;
 
+import com.stockmate.payment.api.payment.dto.PayRequestEventDto;
+import com.stockmate.payment.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "payment")
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Payment {
+public class Payment extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,7 +20,8 @@ public class Payment {
     private String orderNumber;
 
     @Column(name = "payment_type")
-    private String paymentType;
+    @Enumerated(EnumType.STRING)
+    private PaymentType paymentType;
 
     @Column(name = "total_amount")
     private Long totalAmount;
@@ -29,12 +30,16 @@ public class Payment {
     @Column(name = "status")
     private PaymentStatus status;
 
-    @Column(name = "approved_at")
-    private LocalDateTime approvedAt;
-
     @Column(name = "user_id")
     private Long user;
 
-    @OneToOne(mappedBy = "payment")
-    private Verification verification;
+    public static Payment of(PayRequestEventDto p, PaymentStatus status) {
+        return Payment.builder()
+                .orderNumber(p.getOrderNumber())
+                .paymentType(p.getPaymentType())
+                .totalAmount((long) p.getTotalPrice())
+                .status(status)
+                .user(p.getUserId())
+                .build();
+    }
 }
