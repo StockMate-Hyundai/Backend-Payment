@@ -1,6 +1,8 @@
 package com.stockmate.payment.common.config.kafka;
 
+import com.stockmate.payment.api.payment.dto.CancelRequestEvent;
 import com.stockmate.payment.api.payment.dto.CancelResponseEvent;
+import com.stockmate.payment.api.payment.dto.PayRequestEvent;
 import com.stockmate.payment.api.payment.dto.PayResponseEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -30,80 +32,67 @@ public class KafkaConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    /**
-     * ✅ Producer 설정
-     */
+    // producerConfig
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
-
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
-        return new DefaultKafkaProducerFactory<>(configProps);
+        JsonSerializer<Object> jsonSerializer = new JsonSerializer<>();
+        DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
+        typeMapper.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.TYPE_ID);
+
+        Map<String, Class<?>> classIdMapping = new HashMap<>();
+        classIdMapping.put("payFailed", PayResponseEvent.class);
+        typeMapper.setIdClassMapping(classIdMapping);
+        jsonSerializer.setTypeMapper(typeMapper);
+
+        return new DefaultKafkaProducerFactory<>(configProps, new StringSerializer(), jsonSerializer);
     }
 
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
-        log.info("✅ KafkaTemplate 생성 완료");
         return new KafkaTemplate<>(producerFactory());
     }
 
-    /**
-     * ✅ Consumer 설정
-     */
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
-
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "payment-service-group");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        props.put(
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                ErrorHandlingDeserializer.class
-        );
-        props.put(
-                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS,
-                JsonDeserializer.class.getName()
-        );
+        JsonDeserializer<Object> jsonDeserializer = new JsonDeserializer<>(Object.class);
+        DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
+        typeMapper.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.TYPE_ID);
 
-        /** ✅ JSON 자동 역직렬화를 위해 무조건 필요 */
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        Map<String, Class<?>> classIdMapping = new HashMap<>();
 
-        log.info("✅ Kafka Consumer Factory 생성 완료");
+        classIdMapping.put("payRequest", PayRequestEvent.class);
+        classIdMapping.put("cancelRequest", CancelRequestEvent.class);
+        typeMapper.setIdClassMapping(classIdMapping);
 
-        return new DefaultKafkaConsumerFactory<>(props);
+        jsonDeserializer.setTypeMapper(typeMapper);
+        jsonDeserializer.addTrustedPackages("com.stockmate.payment.api.payment.dto");
+        jsonDeserializer.setUseTypeHeaders(false);
+
+        ErrorHandlingDeserializer<Object> errorHandlingDeserializer = new ErrorHandlingDeserializer<>(jsonDeserializer);
+
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), errorHandlingDeserializer);
     }
 
-    /**
-     * ✅ Listener 설정
-     */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
-
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-
-        /** ✅ 에러 핸들러 */
-        factory.setCommonErrorHandler(
-                new DefaultErrorHandler(
-                        (record, exception) -> {
-                            log.error(
-                                    "❌ Kafka 메시지 처리 실패 - topic={}, partition={}, offset={}, error={}",
-                                    record.topic(), record.partition(), record.offset(), exception.getMessage()
-                            );
-                        },
-                        new FixedBackOff(1000L, 3)
-                )
-        );
-
-        log.info("✅ Kafka Listener Container Factory 생성 완료");
-
+        factory.setCommonErrorHandler(new org.springframework.kafka.listener.DefaultErrorHandler(
+                (record, exception) -> log.error("Kafka 메시지 처리 실패 - 토픽: {}, 파티션: {}, 오프셋: {}, 에러: {}",
+                        record.topic(), record.partition(), record.offset(), exception.getMessage()),
+                new org.springframework.util.backoff.FixedBackOff(1000L, 3)
+        ));
+        log.info("Kafka Listener Container Factory 설정 완료");
         return factory;
     }
 }
