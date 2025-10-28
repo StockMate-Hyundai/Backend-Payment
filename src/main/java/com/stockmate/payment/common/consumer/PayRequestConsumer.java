@@ -1,6 +1,6 @@
 package com.stockmate.payment.common.consumer;
 
-import com.stockmate.payment.api.payment.dto.PayRequestEventDto;
+import com.stockmate.payment.api.payment.dto.PayRequestEvent;
 import com.stockmate.payment.api.payment.entity.PaymentType;
 import com.stockmate.payment.api.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class PayRequestConsumer {
     )
 
     public void handlePayRequest(
-            @Payload PayRequestEventDto event,
+            @Payload PayRequestEvent event,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset,

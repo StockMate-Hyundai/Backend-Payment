@@ -58,7 +58,7 @@ public class PaymentService {
 
     // 예치금 결제 처리
     @Transactional
-    public void handleDepositPayRequest(PayRequestEventDto event) {
+    public void handleDepositPayRequest(PayRequestEvent event) {
         log.info("💳 결제 요청 수신 - orderId: {}, payAmount: {}", event.getOrderId(), event.getTotalPrice());
 
         Payment pay = Payment.of(event, PaymentStatus.ORDERED);
@@ -164,7 +164,7 @@ public class PaymentService {
 
 
     // 실패 처리
-    private void payFailed(Payment pay, PayRequestEventDto req, PaymentStatus status, String reason) {
+    private void payFailed(Payment pay, PayRequestEvent req, PaymentStatus status, String reason) {
         pay.setStatus(status);
         paymentRepository.save(pay);
 
@@ -172,7 +172,7 @@ public class PaymentService {
     }
 
     // Kafka 응답 이벤트 발행
-    private void sendResponseEvent(PayRequestEventDto req, String result, String reason) {
+    private void sendResponseEvent(PayRequestEvent req, String result, String reason) {
         PayResponseEvent response = PayResponseEvent.builder()
                 .orderId(req.getOrderId())
                 .orderNumber(req.getOrderNumber())
