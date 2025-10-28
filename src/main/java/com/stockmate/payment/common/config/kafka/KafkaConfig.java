@@ -72,7 +72,7 @@ public class KafkaConfig {
                 "com.stockmate.payment.api.payment.dto,com.stockmate.order.api.order.dto,com.stockmate.parts.api.parts.dto");
         props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         props.put(JsonDeserializer.VALUE_DEFAULT_TYPE,
-                "com.stockmate.payment.api.payment.dto.PayRequestEventDto");
+                "com.stockmate.payment.api.payment.dto.PayRequestEvent");
 
         log.info("Kafka Consumer Factory 설정 완료 - Bootstrap Servers: {}", bootstrapServers);
         return new DefaultKafkaConsumerFactory<>(props);
