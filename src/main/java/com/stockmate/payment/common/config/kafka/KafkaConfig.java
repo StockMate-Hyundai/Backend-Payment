@@ -75,7 +75,7 @@ public class KafkaConfig {
         typeMapper.setIdClassMapping(classIdMapping);
 
         jsonDeserializer.setTypeMapper(typeMapper);
-        jsonDeserializer.addTrustedPackages("com.stockmate.payment.api.payment.dto");
+        jsonDeserializer.addTrustedPackages("*");
         jsonDeserializer.setUseTypeHeaders(false);
 
         ErrorHandlingDeserializer<Object> errorHandlingDeserializer = new ErrorHandlingDeserializer<>(jsonDeserializer);
