@@ -7,6 +7,7 @@ import com.stockmate.payment.api.payment.entity.Payment;
 import com.stockmate.payment.api.payment.entity.PaymentStatus;
 import com.stockmate.payment.api.payment.repository.BalanceRepository;
 import com.stockmate.payment.api.payment.repository.PaymentRepository;
+import com.stockmate.payment.common.exception.NotFoundException;
 import com.stockmate.payment.common.producer.KafkaProducerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,19 @@ public class PaymentService {
     private final BalanceRepository balanceRepository;
     private final PaymentRepository paymentRepository;
     private final KafkaProducerService kafkaProducerService;
+
+    // 예치금 조회
+    public Balance getDeposit(Long userId) {
+        Balance balance = balanceRepository.findByUserId(userId);
+
+        if (balance == null) {
+            log.warn("⚠️ 예치금 정보 없음 - userId: {}", userId);
+            throw new NotFoundException("예치금 정보가 존재하지 않습니다. userId=" + userId);
+        }
+
+        log.info("💰 예치금 조회 - userId: {}, 잔액: {}", userId, balance.getBalance());
+        return balance;
+    }
 
     // 예치금 충전
     @Transactional
