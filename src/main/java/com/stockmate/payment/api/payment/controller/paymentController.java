@@ -1,5 +1,7 @@
 package com.stockmate.payment.api.payment.controller;
 
+import com.stockmate.payment.api.payment.dto.PayRequestEvent;
+import com.stockmate.payment.api.payment.dto.PayResponseEvent;
 import com.stockmate.payment.api.payment.entity.Balance;
 import com.stockmate.payment.api.payment.service.PaymentService;
 import com.stockmate.payment.common.config.security.SecurityUser;
@@ -37,5 +39,14 @@ public class paymentController {
         Long userId = securityUser.getMemberId();
         paymentService.depositCharge(userId, amount);
         return ApiResponse.success_only(SuccessStatus.DEPOSIT_CHARGE_SUCCESS);
+    }
+
+    @PostMapping("/pay")
+    public ResponseEntity<ApiResponse<PayResponseEvent>> depositPay(
+            @RequestBody PayRequestEvent payRequestEvent,
+            @AuthenticationPrincipal SecurityUser securityUser
+            ) {
+        PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent);
+        return ApiResponse.success(SuccessStatus.DEPOSIT_PAY_SUCCESS, response);
     }
 }
