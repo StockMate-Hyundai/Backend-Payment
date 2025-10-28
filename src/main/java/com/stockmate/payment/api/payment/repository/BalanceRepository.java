@@ -11,4 +11,6 @@ public interface BalanceRepository extends JpaRepository<Balance, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM Balance b WHERE b.userId = :userId")
     Balance findBalanceByUserIdWithLock(@Param("userId") Long userId);
+
+    Balance findByUserId(Long userId);
 }
