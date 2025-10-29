@@ -13,9 +13,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ValidateDto {
     private Long orderId;
-    private Long memberId;
     private String orderNumber;
-    private PaymentType paymentType;
+    private String paymentType;
     private int totalPrice;
-    private OrderStatus orderStatus;
+    private String orderStatus;
 }

@@ -116,7 +116,7 @@ public class PaymentService {
 
     // 예치금 결제 취소 처리
     @Transactional
-    public void handleDepositCancelRequest(CancelRequestEvent event) {
+    public CancelResponseEvent handleDepositCancelRequest(CancelRequestEvent event) {
         log.info("💳 결제 취소 요청 수신 - orderId: {}, payAmount: {}", event.getOrderId(), event.getTotalPrice());
 
         try {
@@ -164,5 +164,6 @@ public class PaymentService {
 
             kafkaProducerService.sendPayFailed(response);
         }
+        return null;
     }
 }
