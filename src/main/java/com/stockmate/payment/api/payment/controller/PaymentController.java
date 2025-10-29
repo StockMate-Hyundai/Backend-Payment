@@ -1,5 +1,7 @@
 package com.stockmate.payment.api.payment.controller;
 
+import com.stockmate.payment.api.payment.dto.CancelRequestEvent;
+import com.stockmate.payment.api.payment.dto.CancelResponseEvent;
 import com.stockmate.payment.api.payment.dto.PayRequestEvent;
 import com.stockmate.payment.api.payment.dto.PayResponseEvent;
 import com.stockmate.payment.api.payment.entity.Balance;
@@ -20,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/v1/payment")
 @RequiredArgsConstructor
 @Slf4j
-public class paymentController {
+public class PaymentController {
     private final PaymentService paymentService;
 
     @Operation(summary = "예치금 조회 API", description = "현재 계정의 예치금을 조회합니다.")
@@ -46,11 +48,11 @@ public class paymentController {
 
     @Operation(summary = "예치금 결제 요청 API", description = "예치금으로 결제 요청합니다.")
     @PostMapping("/pay")
-    public ResponseEntity<ApiResponse<PayResponseEvent>> depositPay(
+    public PayResponseEvent depositPay(
             @RequestBody PayRequestEvent payRequestEvent,
             @AuthenticationPrincipal SecurityUser securityUser
             ) {
         PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent);
-        return ApiResponse.success(SuccessStatus.DEPOSIT_PAY_SUCCESS, response);
+        return response;
     }
 }
