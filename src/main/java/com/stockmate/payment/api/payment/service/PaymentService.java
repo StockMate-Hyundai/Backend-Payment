@@ -28,6 +28,7 @@ public class PaymentService {
     public Balance getDeposit(Long userId) {
         Balance balance = balanceRepository.findByUserId(userId);
 
+        // TODO: 테이블 정보가 없을 때 0을 return 하도록
         if (balance == null) {
             log.warn("⚠️ 예치금 정보 없음 - userId: {}", userId);
             throw new NotFoundException("예치금 정보가 존재하지 않습니다. userId=" + userId);
@@ -55,58 +56,61 @@ public class PaymentService {
         log.info("✅ 예치금 충전 완료 - userId: {}, 최종 잔액: {}", userId, balance.getBalance());
     }
 
-
     // 예치금 결제 처리
     @Transactional
-    public void handleDepositPayRequest(PayRequestEvent event) {
+    public PayResponseEvent handleDepositPayRequest(PayRequestEvent event) {
         log.info("💳 결제 요청 수신 - orderId: {}, payAmount: {}", event.getOrderId(), event.getTotalPrice());
 
-        Payment pay = Payment.of(event, PaymentStatus.ORDERED);
+        Payment pay = Payment.of(event, PaymentStatus.REQUESTED);
 
         try {
             // ✅ 1. 주문 검증
             ValidateDto validate = orderService.getOrderByOrderId(event.getOrderId());
-            if (validate == null) throw new IllegalStateException("Order 서버 검증 실패 (null 응답)");
-            if (validate.getTotalPrice() != event.getTotalPrice())
+            if (validate == null) {
+                throw new IllegalStateException("Order 서버 검증 실패 (null 응답)");
+            }
+            if (validate.getTotalPrice() != event.getTotalPrice()) {
                 throw new IllegalArgumentException("결제 금액 불일치");
-            if (validate.getOrderStatus() != OrderStatus.PENDING_APPROVAL)
+            }
+
+            if (event.getOrderStatus() != OrderStatus.ORDER_COMPLETED) {
                 throw new IllegalStateException("결제 불가 상태: " + validate.getOrderStatus());
+            }
 
             // ✅ 2. 잔액 확인
             Balance balance = balanceRepository.findBalanceByUserIdWithLock(event.getMemberId());
-            if (balance == null) throw new IllegalStateException("잔액 정보 없음");
-            if (balance.getBalance() < event.getTotalPrice())
+            if (balance == null) {
+                throw new IllegalStateException("잔액 정보 없음");
+            }
+            if (balance.getBalance() < event.getTotalPrice()) {
                 throw new IllegalStateException("잔액 부족");
+            }
 
             // ✅ 3. 차감 및 결제 완료
-            pay.setStatus(PaymentStatus.APPROVAL_PENDING);
             balance.setBalance(balance.getBalance() - event.getTotalPrice());
             balanceRepository.save(balance);
 
-            pay.setStatus(PaymentStatus.APPROVED);
+            pay.setStatus(PaymentStatus.COMPLETED);
             paymentRepository.save(pay);
 
             log.info("✅ 결제 성공 - userId: {}, 차감 금액: {}, 잔여 잔액: {}",
                     event.getMemberId(), event.getTotalPrice(), balance.getBalance());
 
-            // ✅ 4. 성공 이벤트 발행
-            sendResponseEvent(event, "SUCCESS", null);
+            PayResponseEvent response = PayResponseEvent.of(event, true, null);
+//            kafkaProducerService.sendPaySuccess(response);
 
-        } catch (IllegalArgumentException e) {
-            log.error("❌ 결제 검증 실패 - orderId={}, reason={}", event.getOrderId(), e.getMessage());
-            payFailed(pay, event, PaymentStatus.VALIDATE_FAILED, e.getMessage());
-
-        } catch (IllegalStateException e) {
-            log.error("❌ 결제 실패 - orderId={}, reason={}", event.getOrderId(), e.getMessage());
-            PaymentStatus status =
-                    e.getMessage().contains("잔액") ? PaymentStatus.NOT_ENOUGH :
-                            e.getMessage().contains("상태") ? PaymentStatus.STATUS_ERROR :
-                                    PaymentStatus.FAILED;
-            payFailed(pay, event, status, e.getMessage());
+            return response;
 
         } catch (Exception e) {
-            log.error("💥 시스템 오류 - orderId={}, ex={}", event.getOrderId(), e.toString(), e);
-            payFailed(pay, event, PaymentStatus.FAILED, "INTERNAL_ERROR");
+            log.error("❌ 결제 실패 - orderId={}, reason={}", event.getOrderId(), e.getMessage());
+
+            pay.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(pay);
+
+            PayResponseEvent response = PayResponseEvent.of(event, false, e.getMessage());
+//            kafkaProducerService.sendPayFailed(response);
+
+            return response;
         }
     }
 
@@ -158,30 +162,6 @@ public class PaymentService {
                     .approvalAttemptId("CANCEL-" + System.currentTimeMillis())
                     .build();
 
-            kafkaProducerService.sendPayFailed(response);
-        }
-    }
-
-
-    // 실패 처리
-    private void payFailed(Payment pay, PayRequestEvent req, PaymentStatus status, String reason) {
-        pay.setStatus(status);
-        paymentRepository.save(pay);
-
-        sendResponseEvent(req, "FAILED", reason);
-    }
-
-    // Kafka 응답 이벤트 발행
-    private void sendResponseEvent(PayRequestEvent req, String result, String reason) {
-        PayResponseEvent response = PayResponseEvent.builder()
-                .orderId(req.getOrderId())
-                .orderNumber(req.getOrderNumber())
-                .approvalAttemptId("PAY-" + System.currentTimeMillis())
-                .build();
-
-        if ("SUCCESS".equals(result)) {
-            kafkaProducerService.sendPaySuccess(response);
-        } else {
             kafkaProducerService.sendPayFailed(response);
         }
     }

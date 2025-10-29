@@ -19,6 +19,7 @@ public enum SuccessStatus {
     SEND_USER_MODIFY_ROLE_SUCCESS(HttpStatus.OK,"사용자 역할 변경 성공"),
     DEPOSIT_CHARGE_SUCCESS(HttpStatus.OK, "예치금 충전 완료"),
     DEPOSIT_CHECK_SUCCESS(HttpStatus.OK, "예치금 조회 완료"),
+    DEPOSIT_PAY_SUCCESS(HttpStatus.OK, "예치금 결제 완료"),
 
 
     /**
