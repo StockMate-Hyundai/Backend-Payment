@@ -7,6 +7,7 @@ import com.stockmate.payment.api.payment.service.PaymentService;
 import com.stockmate.payment.common.config.security.SecurityUser;
 import com.stockmate.payment.common.response.ApiResponse;
 import com.stockmate.payment.common.response.SuccessStatus;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class paymentController {
     private final PaymentService paymentService;
 
+    @Operation(summary = "예치금 조회 API", description = "현재 계정의 예치금을 조회합니다.")
     @GetMapping("/amount")
     public ResponseEntity<ApiResponse<Balance>> getDepositAmount(
             @AuthenticationPrincipal SecurityUser securityUser
@@ -31,6 +33,7 @@ public class paymentController {
         return ApiResponse.success(SuccessStatus.DEPOSIT_CHECK_SUCCESS, response);
     }
 
+    @Operation(summary = "예치금 충전 API", description = "현재 계정에 예치금을 입급합니다.")
     @PostMapping("/charge")
     public ResponseEntity<ApiResponse<Void>> depositCharge(
             @RequestParam Long amount,
@@ -41,6 +44,7 @@ public class paymentController {
         return ApiResponse.success_only(SuccessStatus.DEPOSIT_CHARGE_SUCCESS);
     }
 
+    @Operation(summary = "예치금 결제 요청 API", description = "예치금으로 결제 요청합니다.")
     @PostMapping("/pay")
     public ResponseEntity<ApiResponse<PayResponseEvent>> depositPay(
             @RequestBody PayRequestEvent payRequestEvent,
