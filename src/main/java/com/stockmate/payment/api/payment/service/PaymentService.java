@@ -64,18 +64,19 @@ public class PaymentService {
         Payment pay = Payment.of(event, PaymentStatus.REQUESTED);
 
         try {
+            // TODO: 검증 요청
             // ✅ 1. 주문 검증
-            ValidateDto validate = orderService.getOrderByOrderId(event.getOrderId());
-            if (validate == null) {
-                throw new IllegalStateException("Order 서버 검증 실패 (null 응답)");
-            }
-            if (validate.getTotalPrice() != event.getTotalPrice()) {
-                throw new IllegalArgumentException("결제 금액 불일치");
-            }
-
-            if (event.getOrderStatus() != OrderStatus.ORDER_COMPLETED) {
-                throw new IllegalStateException("결제 불가 상태: " + validate.getOrderStatus());
-            }
+//            ValidateDto validate = orderService.getOrderByOrderId(event.getOrderId());
+//            if (validate == null) {
+//                throw new IllegalStateException("Order 서버 검증 실패 (null 응답)");
+//            }
+//            if (validate.getTotalPrice() != event.getTotalPrice()) {
+//                throw new IllegalArgumentException("결제 금액 불일치");
+//            }
+//
+//            if (event.getOrderStatus() != OrderStatus.ORDER_COMPLETED) {
+//                throw new IllegalStateException("결제 불가 상태: " + validate.getOrderStatus());
+//            }
 
             // ✅ 2. 잔액 확인
             Balance balance = balanceRepository.findBalanceByUserIdWithLock(event.getMemberId());
