@@ -20,6 +20,7 @@ public enum SuccessStatus {
     DEPOSIT_CHARGE_SUCCESS(HttpStatus.OK, "예치금 충전 완료"),
     DEPOSIT_CHECK_SUCCESS(HttpStatus.OK, "예치금 조회 완료"),
     DEPOSIT_PAY_SUCCESS(HttpStatus.OK, "예치금 결제 완료"),
+    MONTHLY_PAY_SUCCESS(HttpStatus.OK, "월별 소비 금액 합 조회 성공"),
 
 
     /**
