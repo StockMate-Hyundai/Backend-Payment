@@ -1,16 +1,19 @@
 package com.stockmate.payment.api.payment.service;
 
 import com.stockmate.payment.api.payment.dto.*;
-import com.stockmate.payment.api.payment.entity.Balance;
-import com.stockmate.payment.api.payment.entity.Payment;
-import com.stockmate.payment.api.payment.entity.PaymentStatus;
+import com.stockmate.payment.api.payment.entity.*;
 import com.stockmate.payment.api.payment.repository.BalanceRepository;
+import com.stockmate.payment.api.payment.repository.DepositTransactionRepository;
 import com.stockmate.payment.api.payment.repository.PaymentRepository;
+import com.stockmate.payment.common.exception.BadRequestException;
 import com.stockmate.payment.common.exception.NotFoundException;
 import com.stockmate.payment.common.producer.KafkaProducerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,6 +29,7 @@ public class PaymentService {
     private final BalanceRepository balanceRepository;
     private final PaymentRepository paymentRepository;
     private final KafkaProducerService kafkaProducerService;
+    private final DepositTransactionRepository depositTransactionRepository;
 
     // 예치금 조회
     public Balance getDeposit(Long userId) {
@@ -56,12 +60,15 @@ public class PaymentService {
         balance.setBalance(balance.getBalance() + amount);
         balanceRepository.save(balance);
 
+        DepositTransaction depositTransaction = DepositTransaction.of(amount, balance, userId);
+        depositTransactionRepository.save(depositTransaction);
+
         log.info("✅ 예치금 충전 완료 - userId: {}, 최종 잔액: {}", userId, balance.getBalance());
     }
 
     // 예치금 결제 처리
     @Transactional
-    public PayResponseEvent handleDepositPayRequest(PayRequestEvent event) {
+    public PayResponseEvent handleDepositPayRequest(PayRequestEvent event, Long memberId) {
         log.info("💳 결제 요청 수신 - orderId: {}, payAmount: {}", event.getOrderId(), event.getTotalPrice());
 
         Payment pay = Payment.of(event, PaymentStatus.REQUESTED);
@@ -96,6 +103,9 @@ public class PaymentService {
 
             pay.setStatus(PaymentStatus.COMPLETED);
             paymentRepository.save(pay);
+
+            DepositTransaction depositTransaction = DepositTransaction.of(pay, balance, memberId);
+            depositTransactionRepository.save(depositTransaction);
 
             log.info("✅ 결제 성공 - userId: {}, 차감 금액: {}, 잔여 잔액: {}",
                     event.getMemberId(), event.getTotalPrice(), balance.getBalance());
@@ -171,6 +181,7 @@ public class PaymentService {
         return null;
     }
 
+    // 최근 5개월 지출 정보
     public List<MonthlyPayResponseDto> getLast5MonthSpending(Long userId) {
         log.info("[MonthlyPay] 최근 5개월 지출 조회 시작 ─ userId={}", userId);
 
@@ -192,5 +203,21 @@ public class PaymentService {
 
         log.info("[MonthlyPay] 최근 5개월 result = {}", result);
         return result;
+    }
+
+    // 예치금 거래내역
+    public PageResponseDto<DepositTransactionResponseDto> getDepositTransaction(Long userId, int page, int size) {
+        log.info("[Deposit] ✅ 거래내역 조회 요청 ─ userId={}, page={}, size={}", userId, page, size);
+
+        if (page < 0 || size <= 0)
+            throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<DepositTransaction> depositTransaction = depositTransactionRepository.findAllByUserId(userId, pageable);
+        Page<DepositTransactionResponseDto> mapped = depositTransaction.map(DepositTransactionResponseDto::of);
+        log.info("[Deposit] 거래내역 조회 완료 ─ totalElements={}, totalPages={}, currentPage={}",
+                depositTransaction.getTotalElements(), depositTransaction.getTotalPages(), depositTransaction.getNumber());
+
+        return PageResponseDto.from(mapped);
     }
 }
