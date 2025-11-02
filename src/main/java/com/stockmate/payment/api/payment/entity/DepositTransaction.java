@@ -32,7 +32,9 @@ public class DepositTransaction {
     @JoinColumn(name = "balance_id")
     private Balance balance;
 
-    public static DepositTransaction of (Payment p, TransactionType transactionType, Balance b) {
+    private String userId;
+
+    public static DepositTransaction of (Payment p, TransactionType transactionType, Balance b, Long userId) {
         return DepositTransaction.builder()
                 .amount((long) p.getTotalAmount())
                 .transactionType(transactionType)
@@ -41,7 +43,7 @@ public class DepositTransaction {
                 .build();
     }
 
-    public static DepositTransaction of (TransactionType transactionType, Balance b) {
+    public static DepositTransaction of (TransactionType transactionType, Balance b, Long userId) {
         return DepositTransaction.builder()
                 .transactionType(transactionType)
                 .balance(b)
