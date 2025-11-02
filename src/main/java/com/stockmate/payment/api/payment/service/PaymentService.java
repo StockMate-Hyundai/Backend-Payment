@@ -1,10 +1,9 @@
 package com.stockmate.payment.api.payment.service;
 
 import com.stockmate.payment.api.payment.dto.*;
-import com.stockmate.payment.api.payment.entity.Balance;
-import com.stockmate.payment.api.payment.entity.Payment;
-import com.stockmate.payment.api.payment.entity.PaymentStatus;
+import com.stockmate.payment.api.payment.entity.*;
 import com.stockmate.payment.api.payment.repository.BalanceRepository;
+import com.stockmate.payment.api.payment.repository.DepositTransactionRepository;
 import com.stockmate.payment.api.payment.repository.PaymentRepository;
 import com.stockmate.payment.common.exception.NotFoundException;
 import com.stockmate.payment.common.producer.KafkaProducerService;
@@ -26,6 +25,7 @@ public class PaymentService {
     private final BalanceRepository balanceRepository;
     private final PaymentRepository paymentRepository;
     private final KafkaProducerService kafkaProducerService;
+    private final DepositTransactionRepository depositTransactionRepository;
 
     // 예치금 조회
     public Balance getDeposit(Long userId) {
@@ -55,6 +55,9 @@ public class PaymentService {
 
         balance.setBalance(balance.getBalance() + amount);
         balanceRepository.save(balance);
+
+        DepositTransaction depositTransaction = DepositTransaction.of(TransactionType.CHARGE, balance);
+        depositTransactionRepository.save(depositTransaction);
 
         log.info("✅ 예치금 충전 완료 - userId: {}, 최종 잔액: {}", userId, balance.getBalance());
     }
@@ -96,6 +99,9 @@ public class PaymentService {
 
             pay.setStatus(PaymentStatus.COMPLETED);
             paymentRepository.save(pay);
+
+            DepositTransaction depositTransaction = DepositTransaction.of(pay, TransactionType.PAY, balance);
+            depositTransactionRepository.save(depositTransaction);
 
             log.info("✅ 결제 성공 - userId: {}, 차감 금액: {}, 잔여 잔액: {}",
                     event.getMemberId(), event.getTotalPrice(), balance.getBalance());
@@ -171,6 +177,7 @@ public class PaymentService {
         return null;
     }
 
+    // 최근 5개월 지출 정보
     public List<MonthlyPayResponseDto> getLast5MonthSpending(Long userId) {
         log.info("[MonthlyPay] 최근 5개월 지출 조회 시작 ─ userId={}", userId);
 
