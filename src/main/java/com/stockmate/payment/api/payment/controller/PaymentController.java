@@ -1,8 +1,6 @@
 package com.stockmate.payment.api.payment.controller;
 
-import com.stockmate.payment.api.payment.dto.MonthlyPayResponseDto;
-import com.stockmate.payment.api.payment.dto.PayRequestEvent;
-import com.stockmate.payment.api.payment.dto.PayResponseEvent;
+import com.stockmate.payment.api.payment.dto.*;
 import com.stockmate.payment.api.payment.entity.Balance;
 import com.stockmate.payment.api.payment.service.PaymentService;
 import com.stockmate.payment.common.config.security.SecurityUser;
@@ -51,7 +49,7 @@ public class PaymentController {
             @RequestBody PayRequestEvent payRequestEvent,
             @AuthenticationPrincipal SecurityUser securityUser
             ) {
-        PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent);
+        PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent, securityUser.getMemberId());
         return response;
     }
 
@@ -62,5 +60,16 @@ public class PaymentController {
     ) {
         List<MonthlyPayResponseDto> response = paymentService.getLast5MonthSpending(user.getMemberId());
         return ApiResponse.success(SuccessStatus.MONTHLY_PAY_SUCCESS, response);
+    }
+
+    @Operation(summary = "예치금 거래내역 조회", description = "예치금 거래 내역을 조회합니다.")
+    @GetMapping("/transaction")
+    public ResponseEntity<ApiResponse<PageResponseDto<DepositTransactionResponseDto>>> getDepositTransaction(
+            @AuthenticationPrincipal SecurityUser securityUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponseDto<DepositTransactionResponseDto> response = paymentService.getDepositTransaction(securityUser.getMemberId(), page, size);
+        return ApiResponse.success(SuccessStatus.DEPOSIT_TRANSACTION_SUCCESS, response);
     }
 }

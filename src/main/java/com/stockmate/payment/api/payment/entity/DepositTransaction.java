@@ -2,16 +2,16 @@ package com.stockmate.payment.api.payment.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "deposit_transaction")
 @Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class DepositTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,9 +24,6 @@ public class DepositTransaction {
     @Column(name = "amount")
     private Long amount;
 
-    @Column(name = "description")
-    private String description;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id")
     private Payment payment;
@@ -34,4 +31,27 @@ public class DepositTransaction {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "balance_id")
     private Balance balance;
+
+    private Long userId;
+
+    // 결제
+    public static DepositTransaction of (Payment p, Balance b, Long userId) {
+        return DepositTransaction.builder()
+                .transactionType(TransactionType.PAY)
+                .amount((long) p.getTotalAmount())
+                .payment(p)
+                .balance(b)
+                .userId(userId)
+                .build();
+    }
+
+    // 충전
+    public static DepositTransaction of (Long amount, Balance b, Long userId) {
+        return DepositTransaction.builder()
+                .transactionType(TransactionType.CHARGE)
+                .amount(amount)
+                .balance(b)
+                .userId(userId)
+                .build();
+    }
 }

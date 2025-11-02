@@ -36,7 +36,7 @@ public class PayRequestConsumer {
 
         try {
             if (event.getPaymentType() == PaymentType.DEPOSIT) { // 예치금 결제
-                paymentService.handleDepositPayRequest(event);
+//                paymentService.handleDepositPayRequest(event);
 //            } else if (event.getPaymentType() == PaymentType.CARD) { // 카드 결제
 //                paymentService.handleCardPayRequest(event);
             } else {
