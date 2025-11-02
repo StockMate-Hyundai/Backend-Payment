@@ -1,6 +1,7 @@
 package com.stockmate.payment.api.payment.dto;
 
 import com.stockmate.payment.api.payment.entity.DepositTransaction;
+import com.stockmate.payment.api.payment.entity.Payment;
 import com.stockmate.payment.api.payment.entity.TransactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,11 +20,12 @@ public class DepositTransactionResponseDto {
     private Long balance;
 
     public static DepositTransactionResponseDto of (DepositTransaction dt) {
+        Payment payment = dt.getPayment();
         return DepositTransactionResponseDto.builder()
                 .transactionType(dt.getTransactionType())
-                .transactionTime(dt.getPayment().getUpdatedAt())
+                .transactionTime(payment != null ? payment.getUpdatedAt() : null)
                 .totalAmount(dt.getAmount())
-                .orderId(dt.getPayment().getOrder())
+                .orderId(payment != null ? payment.getOrder() : null)
                 .balance(dt.getBalance().getBalance())
                 .build();
     }

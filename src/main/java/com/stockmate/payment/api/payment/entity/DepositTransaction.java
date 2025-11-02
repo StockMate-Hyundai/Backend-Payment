@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "deposit_transaction")
 @Getter
-@Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class DepositTransaction {
     @Id
@@ -32,21 +32,26 @@ public class DepositTransaction {
     @JoinColumn(name = "balance_id")
     private Balance balance;
 
-    private String userId;
+    private Long userId;
 
-    public static DepositTransaction of (Payment p, TransactionType transactionType, Balance b, Long userId) {
+    // 결제
+    public static DepositTransaction of (Payment p, Balance b, Long userId) {
         return DepositTransaction.builder()
+                .transactionType(TransactionType.PAY)
                 .amount((long) p.getTotalAmount())
-                .transactionType(transactionType)
                 .payment(p)
                 .balance(b)
+                .userId(userId)
                 .build();
     }
 
-    public static DepositTransaction of (TransactionType transactionType, Balance b, Long userId) {
+    // 충전
+    public static DepositTransaction of (Long amount, Balance b, Long userId) {
         return DepositTransaction.builder()
-                .transactionType(transactionType)
+                .transactionType(TransactionType.CHARGE)
+                .amount(amount)
                 .balance(b)
+                .userId(userId)
                 .build();
     }
 }

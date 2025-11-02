@@ -49,7 +49,7 @@ public class PaymentController {
             @RequestBody PayRequestEvent payRequestEvent,
             @AuthenticationPrincipal SecurityUser securityUser
             ) {
-        PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent);
+        PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent, securityUser.getMemberId());
         return response;
     }
 

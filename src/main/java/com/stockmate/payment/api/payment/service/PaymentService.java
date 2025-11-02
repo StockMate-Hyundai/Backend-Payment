@@ -60,7 +60,7 @@ public class PaymentService {
         balance.setBalance(balance.getBalance() + amount);
         balanceRepository.save(balance);
 
-        DepositTransaction depositTransaction = DepositTransaction.of(TransactionType.CHARGE, balance, userId);
+        DepositTransaction depositTransaction = DepositTransaction.of(amount, balance, userId);
         depositTransactionRepository.save(depositTransaction);
 
         log.info("✅ 예치금 충전 완료 - userId: {}, 최종 잔액: {}", userId, balance.getBalance());
@@ -68,7 +68,7 @@ public class PaymentService {
 
     // 예치금 결제 처리
     @Transactional
-    public PayResponseEvent handleDepositPayRequest(PayRequestEvent event) {
+    public PayResponseEvent handleDepositPayRequest(PayRequestEvent event, Long memberId) {
         log.info("💳 결제 요청 수신 - orderId: {}, payAmount: {}", event.getOrderId(), event.getTotalPrice());
 
         Payment pay = Payment.of(event, PaymentStatus.REQUESTED);
@@ -104,7 +104,7 @@ public class PaymentService {
             pay.setStatus(PaymentStatus.COMPLETED);
             paymentRepository.save(pay);
 
-            DepositTransaction depositTransaction = DepositTransaction.of(pay, TransactionType.PAY, balance, event.getMemberId());
+            DepositTransaction depositTransaction = DepositTransaction.of(pay, balance, memberId);
             depositTransactionRepository.save(depositTransaction);
 
             log.info("✅ 결제 성공 - userId: {}, 차감 금액: {}, 잔여 잔액: {}",
