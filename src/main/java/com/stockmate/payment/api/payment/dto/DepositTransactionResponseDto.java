@@ -26,7 +26,7 @@ public class DepositTransactionResponseDto {
                 .transactionTime(payment != null ? payment.getUpdatedAt() : null)
                 .totalAmount(dt.getAmount())
                 .orderId(payment != null ? payment.getOrderId() : null)
-                .balance(dt.getBalance().getBalance())
+                .balance(dt.getCurrentBalance())
                 .build();
     }
 }
