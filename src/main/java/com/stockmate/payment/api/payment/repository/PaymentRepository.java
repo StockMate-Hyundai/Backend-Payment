@@ -12,7 +12,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Query("""
         SELECT SUM(p.totalAmount)
         FROM Payment p
-        WHERE p.user = :userId
+        WHERE p.userId = :userId
           AND p.status = 'COMPLETED'
           AND FUNCTION('YEAR', p.createdAt) = :year
           AND FUNCTION('MONTH', p.createdAt) = :month
