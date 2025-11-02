@@ -2,7 +2,6 @@ package com.stockmate.payment.api.payment.service;
 
 import com.stockmate.payment.api.payment.dto.*;
 import com.stockmate.payment.api.payment.entity.Balance;
-import com.stockmate.payment.api.payment.entity.OrderStatus;
 import com.stockmate.payment.api.payment.entity.Payment;
 import com.stockmate.payment.api.payment.entity.PaymentStatus;
 import com.stockmate.payment.api.payment.repository.BalanceRepository;
@@ -13,6 +12,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -166,5 +169,28 @@ public class PaymentService {
             kafkaProducerService.sendPayFailed(response);
         }
         return null;
+    }
+
+    public List<MonthlyPayResponseDto> getLast5MonthSpending(Long userId) {
+        log.info("[MonthlyPay] 최근 5개월 지출 조회 시작 ─ userId={}", userId);
+
+        List<MonthlyPayResponseDto> result = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+
+        for (int i = 0; i < 5; i++) {
+            LocalDate target = now.minusMonths(i);
+            int year = target.getYear();
+            int month = target.getMonthValue();
+
+            Long sum = paymentRepository.findMonthlySpending(userId, year, month);
+            if (sum == null) sum = 0L;
+
+            String ym = String.format("%04d-%02d", year, month);
+            MonthlyPayResponseDto dto = MonthlyPayResponseDto.of(ym, sum);
+            result.add(dto);
+        }
+
+        log.info("[MonthlyPay] 최근 5개월 result = {}", result);
+        return result;
     }
 }

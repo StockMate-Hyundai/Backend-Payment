@@ -34,6 +34,9 @@ public class Payment extends BaseTimeEntity {
     @Column(name = "user_id")
     private Long user;
 
+    @Column(name = "order_id")
+    private Long order;
+
     public static Payment of(PayRequestEvent p, PaymentStatus status) {
         return Payment.builder()
                 .orderNumber(p.getOrderNumber())
@@ -41,6 +44,7 @@ public class Payment extends BaseTimeEntity {
                 .totalAmount((long) p.getTotalPrice())
                 .status(status)
                 .user(p.getMemberId())
+                .order(p.getOrderId())
                 .build();
     }
 
@@ -51,6 +55,7 @@ public class Payment extends BaseTimeEntity {
                 .totalAmount((long) p.getTotalPrice())
                 .status(status)
                 .user(p.getMemberId())
+                .order(p.getOrderId())
                 .build();
     }
 }

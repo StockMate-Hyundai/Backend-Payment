@@ -1,7 +1,6 @@
 package com.stockmate.payment.api.payment.controller;
 
-import com.stockmate.payment.api.payment.dto.CancelRequestEvent;
-import com.stockmate.payment.api.payment.dto.CancelResponseEvent;
+import com.stockmate.payment.api.payment.dto.MonthlyPayResponseDto;
 import com.stockmate.payment.api.payment.dto.PayRequestEvent;
 import com.stockmate.payment.api.payment.dto.PayResponseEvent;
 import com.stockmate.payment.api.payment.entity.Balance;
@@ -17,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "Payment", description = "결제 관련 API입니다.")
 @RestController
 @RequestMapping("api/v1/payment")
@@ -30,8 +31,7 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<Balance>> getDepositAmount(
             @AuthenticationPrincipal SecurityUser securityUser
     ) {
-        Long userId = securityUser.getMemberId();
-        Balance response = paymentService.getDeposit(userId);
+        Balance response = paymentService.getDeposit(securityUser.getMemberId());
         return ApiResponse.success(SuccessStatus.DEPOSIT_CHECK_SUCCESS, response);
     }
 
@@ -41,8 +41,7 @@ public class PaymentController {
             @RequestParam Long amount,
             @AuthenticationPrincipal SecurityUser securityUser
             ) {
-        Long userId = securityUser.getMemberId();
-        paymentService.depositCharge(userId, amount);
+        paymentService.depositCharge(securityUser.getMemberId(), amount);
         return ApiResponse.success_only(SuccessStatus.DEPOSIT_CHARGE_SUCCESS);
     }
 
@@ -54,5 +53,14 @@ public class PaymentController {
             ) {
         PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent);
         return response;
+    }
+
+    @Operation(summary = "최근 5달 소비 금액 합 조회", description = "최근 5달의 소비금액 합을 조회합니다.")
+    @GetMapping("/monthly-spending")
+    public ResponseEntity<ApiResponse<List<MonthlyPayResponseDto>>> getMonthlySpending(
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        List<MonthlyPayResponseDto> response = paymentService.getLast5MonthSpending(user.getMemberId());
+        return ApiResponse.success(SuccessStatus.MONTHLY_PAY_SUCCESS, response);
     }
 }
