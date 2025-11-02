@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum OrderStatus {
 
     ORDER_COMPLETED("ORDER_COMPLETED"), // 주문 완료
-    PAY_COMPLETED("PAY_COMPLETED"),
+    PAY_COMPLETED("PAY_COMPLETED"), // 결제 완료
     PENDING_APPROVAL("PENDING_APPROVAL"), // 승인 대기 (재고 차감 및 결제 진행 중)
     FAILED("FAILED"), // 결제 실패
     PENDING_SHIPPING("PENDING_SHIPPING"), // 출고 대기
