@@ -32,7 +32,10 @@ public class DepositTransaction {
     @JoinColumn(name = "balance_id")
     private Balance balance;
 
+    private Long currentBalance; // 거래 시점의 잔액
+
     private Long userId;
+
 
     // 결제
     public static DepositTransaction of (Payment p, Balance b, Long userId) {
@@ -41,6 +44,7 @@ public class DepositTransaction {
                 .amount((long) p.getTotalAmount())
                 .payment(p)
                 .balance(b)
+                .currentBalance(b.getBalance())
                 .userId(userId)
                 .build();
     }
@@ -51,6 +55,7 @@ public class DepositTransaction {
                 .transactionType(TransactionType.CHARGE)
                 .amount(amount)
                 .balance(b)
+                .currentBalance(b.getBalance())
                 .userId(userId)
                 .build();
     }
