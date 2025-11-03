@@ -13,4 +13,6 @@ public interface BalanceRepository extends JpaRepository<Balance, Long> {
     Balance findBalanceByUserIdWithLock(@Param("userId") Long userId);
 
     Balance findByUserId(Long userId);
+
+    boolean existsByUserId(Long userId);
 }
