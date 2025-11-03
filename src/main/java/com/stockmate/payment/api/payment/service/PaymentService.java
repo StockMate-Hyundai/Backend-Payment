@@ -11,6 +11,7 @@ import com.stockmate.payment.common.producer.KafkaProducerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -230,12 +231,15 @@ public class PaymentService {
             return;
         }
 
-        Balance balance = Balance.builder()
-                .userId(userId)
-                .balance(0L)
-                .build();
-
-        balanceRepository.save(balance);
-        log.info("[makeDeposit] 예치금 row 생성 완료 - userId={}, balance={}", userId, balance.getBalance());
+        try {
+            Balance balance = Balance.builder()
+                    .userId(userId)
+                    .balance(0L)
+                    .build();
+            balanceRepository.save(balance);
+            log.info("[makeDeposit] 예치금 row 생성 완료 - userId={}, balance={}", userId, balance.getBalance());
+        } catch (DataIntegrityViolationException e) {
+            log.warn("[makeDeposit] 동시 요청으로 인한 중복 생성 시도 무시 - userId={}", userId);
+        }
     }
 }

@@ -74,9 +74,10 @@ public class PaymentController {
 
     @Operation(summary = "예치금 생성", description = "회원가입 시 예치금 정보를 생성합니다.")
     @PostMapping("/make-balance")
-    public void makeDeposit(
-            @RequestBody Long userId
+    public ResponseEntity<ApiResponse<Void>> makeDeposit(
+            @RequestBody MakeBalanceRequestDto request
     ) {
-        paymentService.makeDeposit(userId);
+        paymentService.makeDeposit(request.getUserId());
+        return ApiResponse.success_only(SuccessStatus.BALANCE_MAKE_SUCCESS);
     }
 }
