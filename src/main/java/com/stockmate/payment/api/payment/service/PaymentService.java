@@ -68,7 +68,7 @@ public class PaymentService {
 
     // 예치금 결제 처리
     @Transactional
-    public PayResponseEvent handleDepositPayRequest(PayRequestEvent event, Long memberId) {
+    public PayResponseEvent handleDepositPayRequest(PayRequestEvent event) {
         log.info("💳 결제 요청 수신 - orderId: {}, payAmount: {}", event.getOrderId(), event.getTotalPrice());
 
         Payment pay = Payment.of(event, PaymentStatus.REQUESTED);
@@ -104,7 +104,7 @@ public class PaymentService {
             pay.setStatus(PaymentStatus.COMPLETED);
             paymentRepository.save(pay);
 
-            DepositTransaction depositTransaction = DepositTransaction.of(pay, balance, memberId);
+            DepositTransaction depositTransaction = DepositTransaction.of(pay, balance, event.getMemberId());
             depositTransactionRepository.save(depositTransaction);
 
             log.info("✅ 결제 성공 - userId: {}, 차감 금액: {}, 잔여 잔액: {}",

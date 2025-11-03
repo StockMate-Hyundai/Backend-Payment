@@ -48,7 +48,7 @@ public class PaymentController {
     public PayResponseEvent depositPay(
             @RequestBody PayRequestEvent payRequestEvent
             ) {
-        PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent, securityUser.getMemberId());
+        PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent);
         return response;
     }
 
