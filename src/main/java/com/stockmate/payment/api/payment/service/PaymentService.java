@@ -220,4 +220,22 @@ public class PaymentService {
 
         return PageResponseDto.from(mapped);
     }
+
+    @Transactional
+    public void makeDeposit(Long userId) {
+        log.info("[makeDeposit] 요청 수신 - userId={}", userId);
+
+        if (balanceRepository.existsByUserId(userId)) {
+            log.warn("[makeDeposit] 이미 예치금 row 존재 - userId={}", userId);
+            return;
+        }
+
+        Balance balance = Balance.builder()
+                .userId(userId)
+                .balance(0L)
+                .build();
+
+        balanceRepository.save(balance);
+        log.info("[makeDeposit] 예치금 row 생성 완료 - userId={}, balance={}", userId, balance.getBalance());
+    }
 }
