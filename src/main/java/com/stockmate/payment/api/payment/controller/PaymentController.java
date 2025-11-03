@@ -46,8 +46,7 @@ public class PaymentController {
     @Operation(summary = "예치금 결제 요청 API", description = "예치금으로 결제 요청합니다.")
     @PostMapping("/pay")
     public PayResponseEvent depositPay(
-            @RequestBody PayRequestEvent payRequestEvent,
-            @AuthenticationPrincipal SecurityUser securityUser
+            @RequestBody PayRequestEvent payRequestEvent
             ) {
         PayResponseEvent response = paymentService.handleDepositPayRequest(payRequestEvent, securityUser.getMemberId());
         return response;
