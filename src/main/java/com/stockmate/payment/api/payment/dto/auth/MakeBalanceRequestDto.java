@@ -1,4 +1,4 @@
-package com.stockmate.payment.api.payment.dto;
+package com.stockmate.payment.api.payment.dto.auth;
 
 import lombok.Getter;
 

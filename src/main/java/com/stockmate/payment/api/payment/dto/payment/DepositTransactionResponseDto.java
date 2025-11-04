@@ -1,4 +1,4 @@
-package com.stockmate.payment.api.payment.dto;
+package com.stockmate.payment.api.payment.dto.payment;
 
 import com.stockmate.payment.api.payment.entity.DepositTransaction;
 import com.stockmate.payment.api.payment.entity.Payment;
@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -17,15 +18,17 @@ public class DepositTransactionResponseDto {
     private LocalDateTime transactionTime;
     private Long totalAmount;
     private Long orderId;
+    private List<TransactionPartDetailDto> orderItems;
     private Long balance;
 
-    public static DepositTransactionResponseDto of (DepositTransaction dt) {
+    public static DepositTransactionResponseDto of (DepositTransaction dt, List<TransactionPartDetailDto> pd) {
         Payment payment = dt.getPayment();
         return DepositTransactionResponseDto.builder()
                 .transactionType(dt.getTransactionType())
                 .transactionTime(payment != null ? payment.getUpdatedAt() : null)
                 .totalAmount(dt.getAmount())
                 .orderId(payment != null ? payment.getOrderId() : null)
+                .orderItems(pd)
                 .balance(dt.getCurrentBalance())
                 .build();
     }
