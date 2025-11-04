@@ -25,7 +25,7 @@ public class DepositTransactionResponseDto {
         Payment payment = dt.getPayment();
         return DepositTransactionResponseDto.builder()
                 .transactionType(dt.getTransactionType())
-                .transactionTime(payment != null ? payment.getUpdatedAt() : null)
+                .transactionTime(dt.getUpdatedAt())
                 .totalAmount(dt.getAmount())
                 .orderId(payment != null ? payment.getOrderId() : null)
                 .orderItems(pd)
