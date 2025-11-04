@@ -228,11 +228,10 @@ public class PaymentService {
                 orderId = payment.getOrderId();
             }
 
-            List<TransactionPartDetailDto> orderDetail = null;
+            List<TransactionPartDetailDto> partDetail = null;
             if (orderId != null) {
                 try {
-                    // ✅ Order 상세 조회
-                    orderDetail = orderService.getOrderDetail(orderId);
+                    partDetail = orderService.getOrderDetail(orderId);
                     log.info("[Deposit] 주문 상세 조회 성공 ─ orderId={}", orderId);
 
                 } catch (Exception e) {
@@ -240,12 +239,11 @@ public class PaymentService {
                 }
             }
 
-            // ✅ DepositTransactionResponseDto 생성
-            return DepositTransactionResponseDto.of(dt, orderDetail);
+            return DepositTransactionResponseDto.of(dt, partDetail);
         });
-
         log.info("[Deposit] 거래내역 조회 완료 ─ totalElements={}, totalPages={}, currentPage={}",
                 depositTransaction.getTotalElements(), depositTransaction.getTotalPages(), depositTransaction.getNumber());
+        log.info("[Deposit] 매핑 완료 - data = {}", mapped.getContent());
 
         return PageResponseDto.from(mapped);
     }

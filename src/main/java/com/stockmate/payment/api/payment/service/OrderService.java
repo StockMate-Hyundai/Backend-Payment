@@ -55,11 +55,7 @@ public class OrderService {
 
         try {
             ApiResponse<OrderDetailResponseDto> wrapper = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path(orderServerUrl + "/api/v1/order/detail")
-                            .queryParam("orderId", orderId)
-                            .build()
-                    )
+                    .uri(orderServerUrl + "/api/v1/order/detail?orderId=" + orderId)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<OrderDetailResponseDto>>() {})
                     .timeout(Duration.ofSeconds(5))
