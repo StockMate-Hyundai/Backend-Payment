@@ -1,7 +1,5 @@
-package com.stockmate.payment.api.payment.dto;
+package com.stockmate.payment.api.payment.dto.order;
 
-import com.stockmate.payment.api.payment.entity.OrderStatus;
-import com.stockmate.payment.api.payment.entity.PaymentType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

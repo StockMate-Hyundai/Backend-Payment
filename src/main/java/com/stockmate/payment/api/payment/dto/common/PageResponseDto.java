@@ -1,4 +1,4 @@
-package com.stockmate.payment.api.payment.dto;
+package com.stockmate.payment.api.payment.dto.common;
 
 import lombok.*;
 import org.springframework.data.domain.Page;
