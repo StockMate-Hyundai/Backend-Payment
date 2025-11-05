@@ -1,4 +1,4 @@
-package com.stockmate.payment.api.payment.dto;
+package com.stockmate.payment.api.payment.dto.order;
 
 import com.stockmate.payment.api.payment.entity.OrderStatus;
 import com.stockmate.payment.api.payment.entity.PaymentType;
@@ -11,10 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ValidateDto {
+public class CancelRequestEvent {
     private Long orderId;
+    private Long memberId;
     private String orderNumber;
-    private String paymentType;
+    private PaymentType paymentType;
     private int totalPrice;
-    private String orderStatus;
+    private OrderStatus orderStatus;
 }

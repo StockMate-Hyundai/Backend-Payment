@@ -48,7 +48,7 @@ dependencies {
     implementation 'com.mysql:mysql-connector-j:9.1.0'
 
     // H2
-    runtimeOnly 'com.h2database:h2'
+//    runtimeOnly 'com.h2database:h2'
 
     // WebClient
     implementation 'org.springframework.boot:spring-boot-starter-webflux'

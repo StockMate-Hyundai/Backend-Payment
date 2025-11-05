@@ -1,7 +1,7 @@
 package com.stockmate.payment.common.producer;
 
-import com.stockmate.payment.api.payment.dto.CancelResponseEvent;
-import com.stockmate.payment.api.payment.dto.PayResponseEvent;
+import com.stockmate.payment.api.payment.dto.order.CancelResponseEvent;
+import com.stockmate.payment.api.payment.dto.order.PayResponseEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

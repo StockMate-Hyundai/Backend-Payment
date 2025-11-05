@@ -1,6 +1,13 @@
 package com.stockmate.payment.api.payment.service;
 
 import com.stockmate.payment.api.payment.dto.*;
+import com.stockmate.payment.api.payment.dto.common.PageResponseDto;
+import com.stockmate.payment.api.payment.dto.order.CancelRequestEvent;
+import com.stockmate.payment.api.payment.dto.order.CancelResponseEvent;
+import com.stockmate.payment.api.payment.dto.order.PayResponseEvent;
+import com.stockmate.payment.api.payment.dto.payment.DepositTransactionResponseDto;
+import com.stockmate.payment.api.payment.dto.payment.MonthlyPayResponseDto;
+import com.stockmate.payment.api.payment.dto.payment.TransactionPartDetailDto;
 import com.stockmate.payment.api.payment.entity.*;
 import com.stockmate.payment.api.payment.repository.BalanceRepository;
 import com.stockmate.payment.api.payment.repository.DepositTransactionRepository;
@@ -215,7 +222,29 @@ public class PaymentService {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<DepositTransaction> depositTransaction = depositTransactionRepository.findAllByUserId(userId, pageable);
-        Page<DepositTransactionResponseDto> mapped = depositTransaction.map(DepositTransactionResponseDto::of);
+
+        // 매핑 + order detail 호출
+        Page<DepositTransactionResponseDto> mapped = depositTransaction.map(dt -> {
+
+            Long orderId = null;
+            Payment payment = dt.getPayment();
+            if (payment != null) {
+                orderId = payment.getOrderId();
+            }
+
+            List<TransactionPartDetailDto> partDetail = null;
+            if (orderId != null) {
+                try {
+                    partDetail = orderService.getOrderDetail(orderId);
+                    log.info("[Deposit] 주문 상세 조회 성공 ─ orderId={}", orderId);
+
+                } catch (Exception e) {
+                    log.warn("[Deposit] ⚠ 주문 상세 조회 실패 ─ orderId={}, msg={}", orderId, e.getMessage());
+                }
+            }
+
+            return DepositTransactionResponseDto.of(dt, partDetail);
+        });
         log.info("[Deposit] 거래내역 조회 완료 ─ totalElements={}, totalPages={}, currentPage={}",
                 depositTransaction.getTotalElements(), depositTransaction.getTotalPages(), depositTransaction.getNumber());
 
