@@ -13,7 +13,7 @@
             "healthCheck": {
                 "command": [
                     "CMD-SHELL",
-                    "curl -f http://localhost:8004/api/v1/payment/health-check || exit 1"
+                    "busybox wget -q --spider --timeout=3 http://localhost:8004/api/v1/payment/health-check || exit 1"
                 ],
                 "interval": 30,
                 "retries": 3,
