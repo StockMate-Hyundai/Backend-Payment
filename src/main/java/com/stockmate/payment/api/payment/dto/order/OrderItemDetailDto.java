@@ -14,4 +14,3 @@ public class OrderItemDetailDto {
     private int amount;
     private PartDetailResponseDto partDetail;
 }
-

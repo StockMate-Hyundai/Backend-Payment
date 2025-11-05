@@ -1,6 +1,6 @@
 package com.stockmate.payment.common.consumer;
 
-import com.stockmate.payment.api.payment.dto.CancelRequestEvent;
+import com.stockmate.payment.api.payment.dto.order.CancelRequestEvent;
 import com.stockmate.payment.api.payment.entity.PaymentType;
 import com.stockmate.payment.api.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;

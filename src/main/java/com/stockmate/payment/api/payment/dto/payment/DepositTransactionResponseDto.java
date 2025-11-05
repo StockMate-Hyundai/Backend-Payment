@@ -1,5 +1,6 @@
 package com.stockmate.payment.api.payment.dto.payment;
 
+import com.stockmate.payment.api.payment.dto.order.TransactionPartDetailDto;
 import com.stockmate.payment.api.payment.entity.DepositTransaction;
 import com.stockmate.payment.api.payment.entity.Payment;
 import com.stockmate.payment.api.payment.entity.TransactionType;
@@ -25,7 +26,7 @@ public class DepositTransactionResponseDto {
         Payment payment = dt.getPayment();
         return DepositTransactionResponseDto.builder()
                 .transactionType(dt.getTransactionType())
-                .transactionTime(payment != null ? payment.getUpdatedAt() : null)
+                .transactionTime(dt.getUpdatedAt())
                 .totalAmount(dt.getAmount())
                 .orderId(payment != null ? payment.getOrderId() : null)
                 .orderItems(pd)

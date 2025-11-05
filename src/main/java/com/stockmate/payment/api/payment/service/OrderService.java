@@ -3,7 +3,7 @@ package com.stockmate.payment.api.payment.service;
 import com.stockmate.payment.api.payment.dto.order.OrderItemDetailDto;
 import com.stockmate.payment.api.payment.dto.order.ValidateDto;
 import com.stockmate.payment.api.payment.dto.order.OrderDetailResponseDto;
-import com.stockmate.payment.api.payment.dto.payment.TransactionPartDetailDto;
+import com.stockmate.payment.api.payment.dto.order.TransactionPartDetailDto;
 import com.stockmate.payment.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,11 +55,7 @@ public class OrderService {
 
         try {
             ApiResponse<OrderDetailResponseDto> wrapper = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path(orderServerUrl + "/api/v1/order/detail")
-                            .queryParam("orderId", orderId)
-                            .build()
-                    )
+                    .uri(orderServerUrl + "/api/v1/order/detail?orderId=" + orderId)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<OrderDetailResponseDto>>() {})
                     .timeout(Duration.ofSeconds(5))
