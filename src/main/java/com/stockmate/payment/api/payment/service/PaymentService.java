@@ -2,12 +2,9 @@ package com.stockmate.payment.api.payment.service;
 
 import com.stockmate.payment.api.payment.dto.*;
 import com.stockmate.payment.api.payment.dto.common.PageResponseDto;
-import com.stockmate.payment.api.payment.dto.order.CancelRequestEvent;
-import com.stockmate.payment.api.payment.dto.order.CancelResponseEvent;
-import com.stockmate.payment.api.payment.dto.order.PayResponseEvent;
+import com.stockmate.payment.api.payment.dto.order.*;
 import com.stockmate.payment.api.payment.dto.payment.DepositTransactionResponseDto;
 import com.stockmate.payment.api.payment.dto.payment.MonthlyPayResponseDto;
-import com.stockmate.payment.api.payment.dto.payment.TransactionPartDetailDto;
 import com.stockmate.payment.api.payment.entity.*;
 import com.stockmate.payment.api.payment.repository.BalanceRepository;
 import com.stockmate.payment.api.payment.repository.DepositTransactionRepository;
@@ -26,7 +23,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -213,7 +213,7 @@ public class PaymentService {
         return result;
     }
 
-    // 예치금 거래내역
+    // 예치금 거래내역 (배치로 주문 상세 조회)
     public PageResponseDto<DepositTransactionResponseDto> getDepositTransaction(Long userId, int page, int size) {
         log.info("[Deposit] ✅ 거래내역 조회 요청 ─ userId={}, page={}, size={}", userId, page, size);
 
@@ -223,7 +223,38 @@ public class PaymentService {
         Pageable pageable = PageRequest.of(page, size);
         Page<DepositTransaction> depositTransaction = depositTransactionRepository.findAllByUserId(userId, pageable);
 
-        // 매핑 + order detail 호출
+        /** orderId 목록 수집  */
+        List<Long> orderIds = depositTransaction.getContent().stream()
+                .map(DepositTransaction::getPayment)
+                .filter(p -> p != null && p.getOrderId() != null)
+                .map(Payment::getOrderId)
+                .distinct()
+                .toList();
+
+        /** batch 호출 → orderId → detail 매핑 */
+        Map<Long, List<DepositPartDetailDTO>> orderDetailMap = new HashMap<>();
+
+        if (!orderIds.isEmpty()) {
+            try {
+                List<DepositListResponseDTO> details = orderService.getOrderDetailBatch(orderIds);
+
+                // ✅ orderId 로 묶기
+                orderDetailMap = details.stream()
+                        .collect(Collectors.toMap(
+                                DepositListResponseDTO::getOrderId,    // key
+                                DepositListResponseDTO::getOrderItems       // value
+                        ));
+
+                log.info("[Deposit] ✅ Batch 주문 상세 조회 성공");
+
+            } catch (Exception e) {
+                log.warn("[Deposit] ⚠ Batch 조회 실패 ─ msg={}", e.getMessage());
+            }
+        }
+
+        /** Page 매핑 */
+        Map<Long, List<DepositPartDetailDTO>> finalOrderDetailMap = orderDetailMap;
+
         Page<DepositTransactionResponseDto> mapped = depositTransaction.map(dt -> {
 
             Long orderId = null;
@@ -232,21 +263,16 @@ public class PaymentService {
                 orderId = payment.getOrderId();
             }
 
-            List<TransactionPartDetailDto> partDetail = null;
+            List<DepositPartDetailDTO> partDetail = null;
             if (orderId != null) {
-                try {
-                    partDetail = orderService.getOrderDetail(orderId);
-                    log.info("[Deposit] 주문 상세 조회 성공 ─ orderId={}", orderId);
-
-                } catch (Exception e) {
-                    log.warn("[Deposit] ⚠ 주문 상세 조회 실패 ─ orderId={}, msg={}", orderId, e.getMessage());
-                }
+                partDetail = finalOrderDetailMap.getOrDefault(orderId, null);
             }
 
             return DepositTransactionResponseDto.of(dt, partDetail);
         });
+
         log.info("[Deposit] 거래내역 조회 완료 ─ totalElements={}, totalPages={}, currentPage={}",
-                depositTransaction.getTotalElements(), depositTransaction.getTotalPages(), depositTransaction.getNumber());
+                mapped.getTotalElements(), mapped.getTotalPages(), mapped.getNumber());
 
         return PageResponseDto.from(mapped);
     }
