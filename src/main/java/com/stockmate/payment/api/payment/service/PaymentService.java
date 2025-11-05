@@ -19,6 +19,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -220,7 +221,9 @@ public class PaymentService {
         if (page < 0 || size <= 0)
             throw new BadRequestException("페이지 번호나 사이즈가 유효하지 않습니다.");
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+
         Page<DepositTransaction> depositTransaction = depositTransactionRepository.findAllByUserId(userId, pageable);
 
         /** orderId 목록 수집  */
