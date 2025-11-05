@@ -1,6 +1,5 @@
 package com.stockmate.payment.api.payment.dto.payment;
 
-import com.stockmate.payment.api.payment.dto.order.TransactionPartDetailDto;
 import com.stockmate.payment.api.payment.entity.DepositTransaction;
 import com.stockmate.payment.api.payment.entity.Payment;
 import com.stockmate.payment.api.payment.entity.TransactionType;
