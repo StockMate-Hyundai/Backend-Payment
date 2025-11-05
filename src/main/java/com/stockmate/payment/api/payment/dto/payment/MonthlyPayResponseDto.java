@@ -1,4 +1,4 @@
-package com.stockmate.payment.api.payment.dto;
+package com.stockmate.payment.api.payment.dto.payment;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

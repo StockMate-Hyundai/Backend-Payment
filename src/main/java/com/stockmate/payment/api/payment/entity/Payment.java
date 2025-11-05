@@ -1,6 +1,6 @@
 package com.stockmate.payment.api.payment.entity;
 
-import com.stockmate.payment.api.payment.dto.CancelRequestEvent;
+import com.stockmate.payment.api.payment.dto.order.CancelRequestEvent;
 import com.stockmate.payment.api.payment.dto.PayRequestEvent;
 import com.stockmate.payment.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;

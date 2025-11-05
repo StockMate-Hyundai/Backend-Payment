@@ -1,5 +1,6 @@
-package com.stockmate.payment.api.payment.dto;
+package com.stockmate.payment.api.payment.dto.order;
 
+import com.stockmate.payment.api.payment.dto.PayRequestEvent;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
