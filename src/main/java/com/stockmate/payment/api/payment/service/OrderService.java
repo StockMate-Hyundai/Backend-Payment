@@ -1,9 +1,7 @@
 package com.stockmate.payment.api.payment.service;
 
-import com.stockmate.payment.api.payment.dto.order.OrderItemDetailDto;
+import com.stockmate.payment.api.payment.dto.order.DepositListResponseDTO;
 import com.stockmate.payment.api.payment.dto.order.ValidateDto;
-import com.stockmate.payment.api.payment.dto.order.OrderDetailResponseDto;
-import com.stockmate.payment.api.payment.dto.payment.TransactionPartDetailDto;
 import com.stockmate.payment.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,37 +48,30 @@ public class OrderService {
         }
     }
 
-    public List<TransactionPartDetailDto> getOrderDetail(Long orderId) {
-        log.info("[OrderDetail] 📌 상세조회 요청 시작 → orderId={}", orderId);
+    public List<DepositListResponseDTO> getOrderDetailBatch(List<Long> orderIds) {
+        log.info("[OrderDetailBatch] 📌 상세조회 요청 → orderIds={}", orderIds);
 
         try {
-            ApiResponse<OrderDetailResponseDto> wrapper = webClient.get()
-                    .uri(orderServerUrl + "/api/v1/order/detail?orderId=" + orderId)
+            ApiResponse<List<DepositListResponseDTO>> wrapper = webClient.post()
+                    .uri(orderServerUrl + "/api/v1/order/deposit-detail")
+                    .bodyValue(orderIds)
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<OrderDetailResponseDto>>() {})
+                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<DepositListResponseDTO>>>() {})
                     .timeout(Duration.ofSeconds(5))
                     .block();
 
-            OrderDetailResponseDto response = wrapper != null ? wrapper.getData() : null;
+            List<DepositListResponseDTO> response = wrapper != null ? wrapper.getData() : null;
 
-            if (response == null || response.getOrderItems() == null) {
-                log.warn("[OrderDetail] ⚠️ data가 존재하지 않습니다. → orderId={}", orderId);
+            if (response == null) {
+                log.warn("[OrderDetailBatch] ⚠️ 결과 없음 → orderIds={}", orderIds);
                 return Collections.emptyList();
             }
 
-            log.info("[OrderDetail] 🎯 상세조회 성공 → orderId={}, result={}", orderId, response);
-
-            List<TransactionPartDetailDto> partDetail =
-                    response.getOrderItems().stream()
-                            .map(OrderItemDetailDto::getPartDetail)
-                            .filter(Objects::nonNull)
-                            .map(TransactionPartDetailDto::of)
-                            .toList();
-
-            return partDetail;
+            log.info("[OrderDetailBatch] ✅ 조회 성공 → {}", response);
+            return response;
 
         } catch (Exception e) {
-            log.error("[OrderDetail] ❌ 상세조회 실패 → orderId={}, message={}", orderId, e.getMessage(), e);
+            log.error("[OrderDetailBatch] ❌ 조회 실패 → message={}", e.getMessage(), e);
             throw e;
         }
     }
