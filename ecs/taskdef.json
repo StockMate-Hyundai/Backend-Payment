@@ -1,100 +1,100 @@
 {
-  "compatibilities": [
-    "EC2",
-    "FARGATE",
-    "MANAGED_INSTANCES"
-  ],
-  "containerDefinitions": [
-    {
-      "cpu": 0,
-      "environment": [],
-      "environmentFiles": [],
-      "essential": true,
-      "healthCheck": {
-        "command": [
-          "CMD-SHELL",
-          "curl -f http://localhost:8004/api/v1/payment/health-check || exit 1"
-        ],
-        "interval": 30,
-        "retries": 3,
-        "startPeriod": 30,
-        "timeout": 5
-      },
-      "image": "417172393745.dkr.ecr.ap-northeast-2.amazonaws.com/stockmate-payment",
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/stockmate-payment",
-          "awslogs-create-group": "true",
-          "awslogs-region": "ap-northeast-2",
-          "awslogs-stream-prefix": "ecs"
-        },
-        "secretOptions": []
-      },
-      "mountPoints": [],
-      "name": "stockmate-payment",
-      "portMappings": [
+    "compatibilities": [
+        "EC2",
+        "MANAGED_INSTANCES",
+        "FARGATE"
+    ],
+    "containerDefinitions": [
         {
-          "appProtocol": "http",
-          "containerPort": 8004,
-          "hostPort": 8004,
-          "name": "8004",
-          "protocol": "tcp"
+            "cpu": 0,
+            "environment": [],
+            "environmentFiles": [],
+            "essential": true,
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://localhost:8004/api/v1/payment/health-check || exit 1"
+                ],
+                "interval": 30,
+                "retries": 3,
+                "startPeriod": 30,
+                "timeout": 5
+            },
+            "image": "417172393745.dkr.ecr.ap-northeast-2.amazonaws.com/stockmate-payment",
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/stockmate-payment",
+                    "awslogs-create-group": "true",
+                    "awslogs-region": "ap-northeast-2",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "mountPoints": [],
+            "name": "stockmate-payment",
+            "portMappings": [
+                {
+                    "appProtocol": "http",
+                    "containerPort": 8004,
+                    "hostPort": 8004,
+                    "name": "8004",
+                    "protocol": "tcp"
+                }
+            ],
+            "systemControls": [],
+            "ulimits": [],
+            "volumesFrom": []
         }
-      ],
-      "systemControls": [],
-      "ulimits": [],
-      "volumesFrom": []
-    }
-  ],
-  "cpu": "512",
-  "enableFaultInjection": false,
-  "executionRoleArn": "arn:aws:iam::417172393745:role/ecsTaskExecutionRole",
-  "family": "stockmate-payment",
-  "memory": "1024",
-  "networkMode": "awsvpc",
-  "placementConstraints": [],
-  "registeredAt": "2025-10-20T01:45:56.188Z",
-  "registeredBy": "arn:aws:iam::417172393745:root",
-  "requiresAttributes": [
-    {
-      "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+    ],
+    "cpu": "512",
+    "enableFaultInjection": false,
+    "executionRoleArn": "arn:aws:iam::417172393745:role/ecsTaskExecutionRole",
+    "family": "stockmate-payment",
+    "memory": "1024",
+    "networkMode": "awsvpc",
+    "placementConstraints": [],
+    "registeredAt": "2025-11-05T00:47:22.418Z",
+    "registeredBy": "arn:aws:iam::417172393745:root",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.container-health-check"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "revision": 33,
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
     },
-    {
-      "name": "ecs.capability.execution-role-awslogs"
-    },
-    {
-      "name": "com.amazonaws.ecs.capability.ecr-auth"
-    },
-    {
-      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
-    },
-    {
-      "name": "ecs.capability.container-health-check"
-    },
-    {
-      "name": "ecs.capability.execution-role-ecr-pull"
-    },
-    {
-      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
-    },
-    {
-      "name": "ecs.capability.task-eni"
-    },
-    {
-      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
-    }
-  ],
-  "requiresCompatibilities": [
-    "FARGATE"
-  ],
-  "revision": 1,
-  "runtimePlatform": {
-    "cpuArchitecture": "X86_64",
-    "operatingSystemFamily": "LINUX"
-  },
-  "status": "ACTIVE",
-  "taskDefinitionArn": "arn:aws:ecs:ap-northeast-2:417172393745:task-definition/stockmate-payment:1",
-  "volumes": [],
-  "tags": []
+    "status": "ACTIVE",
+    "taskDefinitionArn": "arn:aws:ecs:ap-northeast-2:417172393745:task-definition/stockmate-payment:33",
+    "volumes": [],
+    "tags": []
 }
