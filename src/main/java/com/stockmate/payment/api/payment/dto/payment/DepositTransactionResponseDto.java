@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class DepositTransactionResponseDto {
+    private Long transactionId;
     private TransactionType transactionType;
     private LocalDateTime transactionTime;
     private Long totalAmount;
@@ -25,6 +26,7 @@ public class DepositTransactionResponseDto {
     public static DepositTransactionResponseDto of (DepositTransaction dt, List<DepositPartDetailDTO> pd) {
         Payment payment = dt.getPayment();
         return DepositTransactionResponseDto.builder()
+                .transactionId(dt.getId())
                 .transactionType(dt.getTransactionType())
                 .transactionTime(dt.getUpdatedAt())
                 .totalAmount(dt.getAmount())
