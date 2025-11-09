@@ -1,7 +1,7 @@
 package com.stockmate.payment.api.payment.entity;
 
-import com.stockmate.payment.api.payment.dto.order.CancelRequestEvent;
 import com.stockmate.payment.api.payment.dto.PayRequestEvent;
+import com.stockmate.payment.api.payment.dto.order.PayCancelRequestEvent;
 import com.stockmate.payment.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -48,7 +48,7 @@ public class Payment extends BaseTimeEntity {
                 .build();
     }
 
-    public static Payment of(CancelRequestEvent p, PaymentStatus status) {
+    public static Payment of(PayCancelRequestEvent p, PaymentStatus status) {
         return Payment.builder()
                 .orderNumber(p.getOrderNumber())
                 .paymentType(p.getPaymentType())

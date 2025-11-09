@@ -50,6 +50,18 @@ public class DepositTransaction extends BaseTimeEntity {
                 .build();
     }
 
+    // 결제 취소
+    public static DepositTransaction cancel (Payment p, Balance b, Long userId) {
+        return DepositTransaction.builder()
+                .transactionType(TransactionType.REFUND)
+                .amount((long) p.getTotalAmount())
+                .payment(p)
+                .balance(b)
+                .currentBalance(b.getBalance())
+                .userId(userId)
+                .build();
+    }
+
     // 충전
     public static DepositTransaction of (Long amount, Balance b, Long userId) {
         return DepositTransaction.builder()

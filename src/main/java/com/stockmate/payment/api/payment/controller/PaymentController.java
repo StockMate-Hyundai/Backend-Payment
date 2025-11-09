@@ -3,6 +3,8 @@ package com.stockmate.payment.api.payment.controller;
 import com.stockmate.payment.api.payment.dto.*;
 import com.stockmate.payment.api.payment.dto.auth.MakeBalanceRequestDto;
 import com.stockmate.payment.api.payment.dto.common.PageResponseDto;
+import com.stockmate.payment.api.payment.dto.order.PayCancelRequestEvent;
+import com.stockmate.payment.api.payment.dto.order.PayCancelResponseEvent;
 import com.stockmate.payment.api.payment.dto.order.PayResponseEvent;
 import com.stockmate.payment.api.payment.dto.payment.DepositTransactionResponseDto;
 import com.stockmate.payment.api.payment.dto.payment.MonthlyPayResponseDto;
@@ -84,5 +86,14 @@ public class PaymentController {
     ) {
         paymentService.makeDeposit(request.getUserId());
         return ApiResponse.success_only(SuccessStatus.BALANCE_MAKE_SUCCESS);
+    }
+
+    @Operation(summary = "예치금 결제 취소", description = "예치금으로 결제된 거래를 취소합니다.")
+    @PostMapping("/cancel")
+    public ResponseEntity<ApiResponse<PayCancelResponseEvent>> payCancel(
+            @RequestBody PayCancelRequestEvent request
+    ) {
+        PayCancelResponseEvent response = paymentService.handleDepositPayCancelRequest(request);
+        return ApiResponse.success(SuccessStatus.PAY_CANCEL_SUCCESS, response);
     }
 }

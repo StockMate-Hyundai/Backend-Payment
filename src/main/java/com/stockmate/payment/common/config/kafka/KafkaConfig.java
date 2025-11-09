@@ -1,7 +1,7 @@
 package com.stockmate.payment.common.config.kafka;
 
-import com.stockmate.payment.api.payment.dto.order.CancelRequestEvent;
 import com.stockmate.payment.api.payment.dto.PayRequestEvent;
+import com.stockmate.payment.api.payment.dto.order.PayCancelRequestEvent;
 import com.stockmate.payment.api.payment.dto.order.PayResponseEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -68,7 +68,7 @@ public class KafkaConfig {
         Map<String, Class<?>> classIdMapping = new HashMap<>();
 
         classIdMapping.put("payRequest", PayRequestEvent.class);
-        classIdMapping.put("cancelRequest", CancelRequestEvent.class);
+        classIdMapping.put("cancelRequest", PayCancelRequestEvent.class);
         typeMapper.setIdClassMapping(classIdMapping);
 
         jsonDeserializer.setTypeMapper(typeMapper);
