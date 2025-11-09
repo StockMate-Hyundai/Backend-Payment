@@ -83,8 +83,7 @@ public class PaymentService {
         Payment pay = Payment.of(event, PaymentStatus.REQUESTED);
 
         try {
-            // TODO: 검증 요청
-            // ✅ 1. 주문 검증
+            // 주문 검증
 //            ValidateDto validate = orderService.getOrderByOrderId(event.getOrderId());
 //            if (validate == null) {
 //                throw new IllegalStateException("Order 서버 검증 실패 (null 응답)");
@@ -97,7 +96,7 @@ public class PaymentService {
 //                throw new IllegalStateException("결제 불가 상태: " + validate.getOrderStatus());
 //            }
 
-            // ✅ 2. 잔액 확인
+            // 잔액 확인
             Balance balance = balanceRepository.findBalanceByUserIdWithLock(event.getMemberId());
             if (balance == null) {
                 throw new IllegalStateException("잔액 정보 없음");
@@ -106,7 +105,7 @@ public class PaymentService {
                 throw new IllegalStateException("잔액 부족");
             }
 
-            // ✅ 3. 차감 및 결제 완료
+            // 차감 및 결제 완료
             balance.setBalance(balance.getBalance() - event.getTotalPrice());
             balanceRepository.save(balance);
 
@@ -119,10 +118,9 @@ public class PaymentService {
             log.info("✅ 결제 성공 - userId: {}, 차감 금액: {}, 잔여 잔액: {}",
                     event.getMemberId(), event.getTotalPrice(), balance.getBalance());
 
-            PayResponseEvent response = PayResponseEvent.of(event, true, null);
-//            kafkaProducerService.sendPaySuccess(response);
+            //            kafkaProducerService.sendPaySuccess(response);
 
-            return response;
+            return PayResponseEvent.of(event, true, null);
 
         } catch (Exception e) {
             log.error("❌ 결제 실패 - orderId={}, reason={}", event.getOrderId(), e.getMessage());
@@ -130,64 +128,66 @@ public class PaymentService {
             pay.setStatus(PaymentStatus.FAILED);
             paymentRepository.save(pay);
 
-            PayResponseEvent response = PayResponseEvent.of(event, false, e.getMessage());
 //            kafkaProducerService.sendPayFailed(response);
 
-            return response;
+            return PayResponseEvent.of(event, false, e.getMessage());
         }
     }
 
     // 예치금 결제 취소 처리
     @Transactional
-    public CancelResponseEvent handleDepositCancelRequest(CancelRequestEvent event) {
+    public PayCancelResponseEvent handleDepositPayCancelRequest(PayCancelRequestEvent event) {
         log.info("💳 결제 취소 요청 수신 - orderId: {}, payAmount: {}", event.getOrderId(), event.getTotalPrice());
 
+        Payment payment = paymentRepository.findByOrderNumber(event.getOrderNumber());
+
         try {
-            // ✅ 1. 결제 내역 확인
-            Payment payment = paymentRepository.findByOrderNumber(event.getOrderNumber());
-            if (payment == null) throw new IllegalStateException("결제 정보 없음");
+            // 결제 내역 확인
+
+            if (payment == null) {
+                throw new IllegalStateException("결제 정보 없음");
+            }
 
             // 이미 취소된 결제면 중복 처리 방지
-            if (payment.getStatus() == PaymentStatus.CANCELLED || payment.getStatus() == PaymentStatus.REFUNDED) {
+            if (payment.getStatus() == PaymentStatus.REFUNDED) {
                 log.warn("⚠️ 이미 취소된 결제 - orderId: {}", event.getOrderId());
                 throw new IllegalStateException("이미 취소된 결제입니다.");
             }
 
-            // ✅ 2. 잔액 복원
+            // 잔액 복원
             Balance balance = balanceRepository.findBalanceByUserIdWithLock(event.getMemberId());
             if (balance == null) throw new IllegalStateException("잔액 정보 없음");
 
             balance.setBalance(balance.getBalance() + event.getTotalPrice());
             balanceRepository.save(balance);
 
-            // ✅ 3. 결제 상태 변경
+            // 결제 상태 변경
             payment.setStatus(PaymentStatus.REFUNDED);
             paymentRepository.save(payment);
+
+            // 트랜잭션 저장
+            DepositTransaction depositTransaction = DepositTransaction.cancel(payment, balance, event.getMemberId());
+            depositTransactionRepository.save(depositTransaction);
+
+            // 성공 이벤트 발행
+            // kafkaProducerService.sendCancelSuccess(response);
 
             log.info("✅ 결제 취소 완료 - userId: {}, 환불 금액: {}, 복원 후 잔액: {}",
                     event.getMemberId(), event.getTotalPrice(), balance.getBalance());
 
-            // ✅ 4. 성공 이벤트 발행
-            CancelResponseEvent response = CancelResponseEvent.of(event);
-            kafkaProducerService.sendCancelSuccess(response); // 결제 성공/취소 공용 토픽으로 발행
+            return PayCancelResponseEvent.of(event, true, null);
 
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
             log.error("❌ 결제 취소 실패 - orderId={}, reason={}", event.getOrderId(), e.getMessage());
 
-            CancelResponseEvent response = CancelResponseEvent.of(event);
-            kafkaProducerService.sendCancelFailed(response);
-        } catch (Exception e) {
-            log.error("💥 시스템 오류 - orderId={}, ex={}", event.getOrderId(), e.toString(), e);
+            if (payment != null) {
+                payment.setStatus(PaymentStatus.CANCEL_FAILED);
+                paymentRepository.save(payment);
+            }
+//            kafkaProducerService.sendCancelFailed(response);
+            return PayCancelResponseEvent.of(event, false, e.getMessage());
 
-            PayResponseEvent response = PayResponseEvent.builder()
-                    .orderId(event.getOrderId())
-                    .orderNumber(event.getOrderNumber())
-                    .approvalAttemptId("CANCEL-" + System.currentTimeMillis())
-                    .build();
-
-            kafkaProducerService.sendPayFailed(response);
         }
-        return null;
     }
 
     // 최근 5개월 지출 정보
