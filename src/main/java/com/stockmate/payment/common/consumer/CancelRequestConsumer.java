@@ -1,6 +1,6 @@
 package com.stockmate.payment.common.consumer;
 
-import com.stockmate.payment.api.payment.dto.order.CancelRequestEvent;
+import com.stockmate.payment.api.payment.dto.order.PayCancelRequestEvent;
 import com.stockmate.payment.api.payment.entity.PaymentType;
 import com.stockmate.payment.api.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class CancelRequestConsumer {
     )
 
     public void handleCancelRequest(
-            @Payload CancelRequestEvent event,
+            @Payload PayCancelRequestEvent event,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset,
@@ -36,7 +36,7 @@ public class CancelRequestConsumer {
 
         try {
             if (event.getPaymentType() == PaymentType.DEPOSIT) { // 예치금 결제
-                paymentService.handleDepositCancelRequest(event);
+                paymentService.handleDepositPayCancelRequest(event);
 //            } else if (event.getPaymentType() == PaymentType.CARD) { // 카드 결제
 //                paymentService.handleCardPayRequest(event);
             } else {

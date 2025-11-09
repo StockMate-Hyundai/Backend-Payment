@@ -9,16 +9,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CancelResponseEvent {
+public class PayCancelResponseEvent {
     private Long orderId;
     private String orderNumber;
     private String approvalAttemptId; // Saga 시도 식별자
+    private Boolean isSuccess;
+    private String message;
 
-    public static CancelResponseEvent of (CancelRequestEvent c) {
-        return CancelResponseEvent.builder()
+    public static PayCancelResponseEvent of (PayCancelRequestEvent c, Boolean isSuccess, String message) {
+        return PayCancelResponseEvent.builder()
                 .orderId(c.getOrderId())
                 .orderNumber(c.getOrderNumber())
                 .approvalAttemptId("CANCEL-" + System.currentTimeMillis())
+                .isSuccess(isSuccess)
+                .message(message)
                 .build();
     }
 }

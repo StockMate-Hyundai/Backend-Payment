@@ -1,6 +1,6 @@
 package com.stockmate.payment.common.producer;
 
-import com.stockmate.payment.api.payment.dto.order.CancelResponseEvent;
+import com.stockmate.payment.api.payment.dto.order.PayCancelResponseEvent;
 import com.stockmate.payment.api.payment.dto.order.PayResponseEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +72,7 @@ public class KafkaProducerService {
         });
     }
 
-    public void sendCancelSuccess(CancelResponseEvent event) {
+    public void sendCancelSuccess(PayCancelResponseEvent event) {
         CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(
                 cancelSuccessTopic,
                 event.getOrderId().toString(),
@@ -93,7 +93,7 @@ public class KafkaProducerService {
         });
     }
 
-    public void sendCancelFailed(CancelResponseEvent event) {
+    public void sendCancelFailed(PayCancelResponseEvent event) {
         CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(
                 cancelFailedTopic,
                 event.getOrderId().toString(),
