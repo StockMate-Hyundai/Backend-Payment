@@ -23,6 +23,7 @@ public enum SuccessStatus {
     MONTHLY_PAY_SUCCESS(HttpStatus.OK, "월별 소비 금액 합 조회 성공"),
     DEPOSIT_TRANSACTION_SUCCESS(HttpStatus.OK, "예치금 거래 내역 조회 성공"),
     BALANCE_MAKE_SUCCESS(HttpStatus.OK, "예치금 생성 완료"),
+    PAY_CANCEL_SUCCESS(HttpStatus.OK, "결제 취소 완료"),
 
 
     /**
