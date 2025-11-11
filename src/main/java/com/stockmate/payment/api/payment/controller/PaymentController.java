@@ -90,10 +90,9 @@ public class PaymentController {
 
     @Operation(summary = "예치금 결제 취소", description = "예치금으로 결제된 거래를 취소합니다.")
     @PostMapping("/cancel")
-    public ResponseEntity<ApiResponse<PayCancelResponseEvent>> payCancel(
+    public PayCancelResponseEvent payCancel(
             @RequestBody PayCancelRequestEvent request
     ) {
-        PayCancelResponseEvent response = paymentService.handleDepositPayCancelRequest(request);
-        return ApiResponse.success(SuccessStatus.PAY_CANCEL_SUCCESS, response);
+        return paymentService.handleDepositPayCancelRequest(request);
     }
 }
